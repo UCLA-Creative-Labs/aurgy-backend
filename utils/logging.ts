@@ -1,4 +1,5 @@
 import { createLogger, format, transports } from 'winston';
+import path from 'path';
 const { combine, printf } = format;
 
 const custom_format = printf( ({level, message, timestamp}) => {
@@ -16,6 +17,6 @@ export const logger = createLogger({
 });
 
 if (process.env.NODE_ENV === 'PROD') {
-  logger.add(new transports.File({ filename: 'logs/error.log', level: 'error' }));
-  logger.add(new transports.File({ filename: 'logs/stdout' }));
+  logger.add(new transports.File({ filename: path.resolve(__dirname, '../logs/error.log'), level: 'error' }));
+  logger.add(new transports.File({ filename: path.resolve(__dirname, '../logs/stdout') }));
 }
