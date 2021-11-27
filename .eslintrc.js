@@ -5,7 +5,6 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
-    'plugin:react/recommended',
     'plugin:import/typescript',
     'plugin:@typescript-eslint/recommended',
   ],
@@ -20,14 +19,8 @@ module.exports = {
   },
   plugins: [
     'import',
-    'react',
     '@typescript-eslint',
   ],
-  settings: {
-    react: {
-      version: 'detect',
-    },
-  },
   rules: {
     'linebreak-style': [ 'error', 'unix' ],
 
