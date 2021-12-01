@@ -1,12 +1,21 @@
 import express from 'express';
 import {logger} from '../utils';
 
+import { DbClient } from '../lib';
+
+const client = new DbClient();
 const app = express();
 
-app.get('/', (_req, res) => {
-  res.send('Hello!!');
-});
+async function main() {
+  await client.configure();
 
-const PORT = process.env.PORT ?? 3000;
+  app.get('/', (_req, res) => {
+    res.send('Hello!!');
+  });
 
-app.listen(PORT, () => logger.info(`App listening on PORT ${PORT}`));
+  const PORT = process.env.PORT ?? 3000;
+
+  app.listen(PORT, () => logger.info(`App listening on PORT ${PORT}`));
+}
+
+main();
