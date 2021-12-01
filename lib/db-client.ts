@@ -36,19 +36,26 @@ export class DbClient {
   private _connectionString: string;
 
   public constructor() {
+    oracledb.initOracleClient({configDir: '/home/opc/instantclient_19_10' });
     this._password = process.env.PASSWORD ?? '';
     this._connectionString = process.env.CONNECTION_STRING ?? '';
-  }
+    console.log(this._password); 
+ }
 
   public async configure(): Promise<void> {
-    if (this.connection != null && this._soda != null) return;
-    this._connection = await oracledb.getConnection({
-      user: 'admin',
-      password: this._password,
-      connectionString: this._connectionString,
-    });
-    this._soda = await this._connection.getSodaDatabase();
-    logger.success('Oracle DB connection established!');
+    if (this._connection != null && this._soda != null) return;
+    console.log(this._connectionString); 
+    try {
+      this._connection = await oracledb.getConnection({
+        user: 'admin',
+        password: this._password,
+        connectionString: this._connectionString,
+      });
+      this._soda = await this._connection.getSodaDatabase();
+      logger.info('Oracle DB connection established!');
+    } catch (err) {
+      logger.error(err);
+    }
   }
 
   public async openCollection(collectionName: string): Promise<oracledb.SodaCollection> {

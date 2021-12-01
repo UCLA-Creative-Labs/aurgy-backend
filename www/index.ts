@@ -7,7 +7,8 @@ const client = new DbClient();
 const app = express();
 
 async function main() {
-  await client.configure();
+  try { await client.configure(); }
+  catch (err) { logger.error(err); }
 
   app.get('/', (_req, res) => {
     res.send('Hello!!');

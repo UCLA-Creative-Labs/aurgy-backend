@@ -1930,10 +1930,9 @@ optionator@^0.9.1:
     type-check "^0.4.0"
     word-wrap "^1.2.3"
 
-oracledb@^5.3.0:
+"oracledb@https://github.com/oracle/node-oracledb/releases/download/v5.3.0/oracledb-src-5.3.0.tgz":
   version "5.3.0"
-  resolved "https://registry.yarnpkg.com/oracledb/-/oracledb-5.3.0.tgz#a15e6cd16757d8711a2c006a28bd7ecd3b8466f7"
-  integrity sha512-HMJzQ6lCf287ztvvehTEmjCWA21FQ3RMvM+mgoqd4i8pkREuqFWO+y3ovsGR9moJUg4T0xjcwS8rl4mggWPxmg==
+  resolved "https://github.com/oracle/node-oracledb/releases/download/v5.3.0/oracledb-src-5.3.0.tgz#1bd2c83751fc5fc319497a35692c6f80821d5a27"
 
 p-cancelable@^1.0.0:
   version "1.1.0"
