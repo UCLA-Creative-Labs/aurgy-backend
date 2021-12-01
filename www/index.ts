@@ -13,8 +13,7 @@ async function main() {
   app.get('/', async (_req, res) => {
     const collection = await client.openCollection('test');
     const count = await collection.find().count();
-    res.send(`Connection to db established!! Count: ${count}.`);
-  });
+    res.send(`Connection to db established!! Count: ${JSON.stringify(count)}.`); });
 
   const PORT = process.env.PORT ?? 3000;
 
