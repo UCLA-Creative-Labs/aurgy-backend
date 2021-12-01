@@ -39,12 +39,10 @@ export class DbClient {
     oracledb.initOracleClient({configDir: '/home/opc/instantclient_19_10' });
     this._password = process.env.PASSWORD ?? '';
     this._connectionString = process.env.CONNECTION_STRING ?? '';
-    console.log(this._password); 
  }
 
   public async configure(): Promise<void> {
     if (this._connection != null && this._soda != null) return;
-    console.log(this._connectionString); 
     try {
       this._connection = await oracledb.getConnection({
         user: 'admin',

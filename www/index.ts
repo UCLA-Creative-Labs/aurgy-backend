@@ -10,8 +10,10 @@ async function main() {
   try { await client.configure(); }
   catch (err) { logger.error(err); }
 
-  app.get('/', (_req, res) => {
-    res.send('Hello!!');
+  app.get('/', async (_req, res) => {
+    const collection = await client.openCollection('test');
+    const count = await collection.find().count();
+    res.send(`Connection to db established!! Count: ${count}.`);
   });
 
   const PORT = process.env.PORT ?? 3000;
