@@ -1,5 +1,5 @@
-import { createLogger, format, transports } from 'winston';
 import path from 'path';
+import { createLogger, format, transports } from 'winston';
 const { combine, printf } = format;
 
 const custom_format = printf( ({level, message, timestamp}) => {

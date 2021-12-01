@@ -1,7 +1,6 @@
 import express from 'express';
-import {logger} from '../utils';
-
 import { DbClient } from '../lib';
+import {logger} from '../utils';
 
 const client = new DbClient();
 const app = express();
@@ -20,4 +19,4 @@ async function main() {
   app.listen(PORT, () => logger.info(`App listening on PORT ${PORT}`));
 }
 
-main();
+void main();

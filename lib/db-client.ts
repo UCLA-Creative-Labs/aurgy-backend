@@ -1,17 +1,12 @@
 import oracledb from 'oracledb';
 import {logger} from '../utils';
 
-export interface IDbClient {
-  readonly connection: oracledb.Connection;
-  configure(): Promise<void>
-}
-
 export class DbClient {
   get connection(): oracledb.Connection {
     if (this._connection == null) {
       throw new Error(
         'DbClient is not connected to Oracle JSON Database. ' +
-        'Make sure you configure the client with DbClient.configure().'
+        'Make sure you configure the client with DbClient.configure().',
       );
     }
     return this._connection;
@@ -21,7 +16,7 @@ export class DbClient {
     if (this._soda == null) {
       throw new Error(
         'SODA is not configured on DbClient. ' +
-        'Make sure you configure the client with DbClient.configure().'
+        'Make sure you configure the client with DbClient.configure().',
       );
     }
     return this._soda;
@@ -39,7 +34,7 @@ export class DbClient {
     oracledb.initOracleClient({configDir: '/home/opc/instantclient_19_10' });
     this._password = process.env.PASSWORD ?? '';
     this._connectionString = process.env.CONNECTION_STRING ?? '';
-    this.collections = {}; 
+    this.collections = {};
   }
 
   public async configure(): Promise<void> {
