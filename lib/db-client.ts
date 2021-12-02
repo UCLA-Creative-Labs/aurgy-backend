@@ -1,7 +1,15 @@
 import oracledb from 'oracledb';
 import {logger} from '../utils';
 
+/**
+ * A Client for managing database connections.
+ */
 export class DbClient {
+  /**
+   * The Oracle DB connection.
+   *
+   * @throws if the Client is not configured
+   */
   get connection(): oracledb.Connection {
     if (this._connection == null) {
       throw new Error(
@@ -12,6 +20,11 @@ export class DbClient {
     return this._connection;
   }
 
+  /**
+   * The soda database connection for Oracle DB.
+   *
+   * @throws if the Client is not configured
+   */
   get soda(): oracledb.SodaDatabase {
     if (this._soda == null) {
       throw new Error(
@@ -22,13 +35,28 @@ export class DbClient {
     return this._soda;
   }
 
+  /**
+   * Database collections where the key is the collection name.
+   */
   public readonly collections: {[name: string]: oracledb.SodaCollection};
 
-  private _connection?: oracledb.Connection;
-  private _soda?: oracledb.SodaDatabase;
+  /**
+   * The password for the oracle db connection.
+   */
+  private readonly _password: string;
+  /**
+   * The connection string for the oracle db connection.
+   */
+  private readonly _connectionString: string;
 
-  private _password: string;
-  private _connectionString: string;
+  /**
+   * The private variable containing the connection.
+   */
+  private _connection?: oracledb.Connection;
+  /**
+   * The private variable contianing the soda instance.
+   */
+  private _soda?: oracledb.SodaDatabase;
 
   public constructor() {
     oracledb.initOracleClient({configDir: '/home/opc/instantclient_19_10' });
@@ -37,6 +65,9 @@ export class DbClient {
     this.collections = {};
   }
 
+  /**
+   * Configures the db client. You must run this function once.
+   */
   public async configure(): Promise<void> {
     if (this._connection != null && this._soda != null) return;
     try {
@@ -52,6 +83,10 @@ export class DbClient {
     }
   }
 
+  /**
+   * Open a database collection given the collection name.
+   * @param collectionName the name of the collection
+   */
   public async openCollection(collectionName: string): Promise<oracledb.SodaCollection> {
     if (this.collections[collectionName] != null)
       return this.collections[collectionName];
