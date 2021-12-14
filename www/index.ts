@@ -1,22 +1,25 @@
 import express from 'express';
-import { DbClient } from '../lib';
+import { getClient } from '../lib';
 import {logger} from '../utils';
 
-const client = new DbClient();
+// ROUTE
+import { POST_login } from './login';
+
+const PORT = process.env.PORT ?? 3000;
+
 const app = express();
 
-async function main() {
-  try { await client.configure(); }
-  catch (err) { logger.error(err); }
+app.use(express.json()); // for parsing application/json
 
-  app.get('/', async (_req, res) => {
-    const collection = await client.openCollection('test');
-    const count = await collection.find().count();
-    res.send(`Connection to db established!! Count: ${JSON.stringify(count)}.`); });
+app.get('/', async (_req, res) => {
+  const client = await getClient();
+  const collection = await client.openCollection('test');
+  const count = await collection.find().count();
+  res.send(`Connection to db established!! Count: ${JSON.stringify(count)}`);
+});
 
-  const PORT = process.env.PORT ?? 3000;
+// LOGIN
+app.post('/post', POST_login);
 
-  app.listen(PORT, () => logger.info(`App listening on PORT ${PORT}`));
-}
+app.listen(PORT, () => logger.info(`App listening on PORT ${PORT}`));
 
-void main();

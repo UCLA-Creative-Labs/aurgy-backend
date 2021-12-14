@@ -100,3 +100,16 @@ export class DbClient {
     return collection;
   }
 }
+
+let CLIENT: DbClient;
+
+export async function getClient(): Promise<DbClient> {
+  if (CLIENT !== null) return CLIENT;
+
+  CLIENT = new DbClient();
+  try { await CLIENT.configure(); }
+  catch (err) { logger.error(err); }
+
+  return CLIENT;
+}
+
