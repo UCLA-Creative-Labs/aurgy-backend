@@ -13,5 +13,5 @@ export async function POST_login(req: Request, res: Response) {
   const userTable = await client.openCollection('users');
   userTable.insertOne(userInfo);
 
-  res.send({accessToken});
+  res.send({userInfo});
 }

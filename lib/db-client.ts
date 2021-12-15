@@ -1,6 +1,9 @@
 import oracledb from 'oracledb';
 import {logger} from '../utils';
 
+// To make sure all writes are saved
+oracledb.autoCommit = true;
+
 /**
  * A Client for managing database connections.
  */
