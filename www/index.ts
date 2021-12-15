@@ -4,7 +4,7 @@ import express from 'express';
 import { getClient } from '../lib';
 import {logger} from '../utils';
 
-// ROUTE
+// ROUTES
 import { POST_login } from './login';
 
 const PORT = process.env.PORT ?? 3000;
