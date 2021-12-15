@@ -70,7 +70,6 @@ export class DbClient {
    */
   public async configure(): Promise<void> {
     if (this._connection != null && this._soda != null) return;
-    console.log(this._password);
     try {
       this._connection = await oracledb.getConnection({
         user: 'admin',
@@ -107,7 +106,6 @@ let CLIENT: DbClient;
 export async function getClient(): Promise<DbClient> {
   if (CLIENT != undefined) return CLIENT;
 
-  console.log('generating client');
   CLIENT = new DbClient();
   try { await CLIENT.configure(); }
   catch (err) { logger.error(err); }

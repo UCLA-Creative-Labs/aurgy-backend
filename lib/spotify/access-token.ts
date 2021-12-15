@@ -15,7 +15,7 @@ export async function getAccessToken(refreshToken: string): Promise<string> {
   const res = await fetch(TOKEN, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: objectToForm(body),
   });
@@ -26,9 +26,9 @@ export async function getAccessToken(refreshToken: string): Promise<string> {
 
   const data = await res.json();
 
-  if (isTokenResponse(data)) {
-    return data.access_token;
+  if (!isTokenResponse(data)) {
+    throw new Error('Error: Response from Spotify not in token response form');
   }
 
-  throw new Error('Error: Response from Spotify not in token response form');
+  return data.access_token;
 }
