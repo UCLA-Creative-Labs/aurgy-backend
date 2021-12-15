@@ -7,7 +7,7 @@ export async function getMeInfo(accessToken: string): Promise<UserInfoResponse> 
   const res = await fetch(ME, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 

@@ -3,7 +3,7 @@ import { getClient } from '../lib';
 import { getAccessToken } from '../lib/spotify/access-token';
 import { getMeInfo } from '../lib/spotify/me';
 
-export async function POST_login(req: Request, res: Response) {
+export async function POST_login(req: Request, res: Response): Promise<void> {
   const client = await getClient();
 
   const refreshToken = req.body.refreshToken;
@@ -11,7 +11,6 @@ export async function POST_login(req: Request, res: Response) {
   const userInfo = await getMeInfo(accessToken);
 
   const userTable = await client.openCollection('users');
-  userTable.insertOne(userInfo);
-
+  await userTable.insertOne(userInfo);
   res.send({userInfo});
 }
