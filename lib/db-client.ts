@@ -1,6 +1,9 @@
 import oracledb from 'oracledb';
 import {logger} from '../utils';
 
+// To make sure all writes are saved
+oracledb.autoCommit = true;
+
 /**
  * A Client for managing database connections.
  */
@@ -100,3 +103,16 @@ export class DbClient {
     return collection;
   }
 }
+
+let CLIENT: DbClient;
+
+export async function getClient(): Promise<DbClient> {
+  if (CLIENT != undefined) return CLIENT;
+
+  CLIENT = new DbClient();
+  try { await CLIENT.configure(); }
+  catch (err) { logger.error(err); }
+
+  return CLIENT;
+}
+
