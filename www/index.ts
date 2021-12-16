@@ -6,6 +6,7 @@ import {logger} from '../utils';
 
 // ROUTES
 import { POST_login } from './login';
+import { lobby_router } from './lobby';
 
 const PORT = process.env.PORT ?? 3000;
 
@@ -28,6 +29,7 @@ app.get('/', async (_req, res) => {
 
 // LOGIN
 app.post('/login', POST_login);
+app.use('/lobby', lobby_router);
 
 app.listen(PORT, () => logger.info(`App listening on PORT ${PORT}`));
 
