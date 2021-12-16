@@ -1,5 +1,5 @@
-import {DbClient, getClient} from '../../lib';
 import oracledb from 'oracledb';
+import {DbClient, getClient} from '../../lib';
 
 jest.mock('oracledb');
 
@@ -68,4 +68,4 @@ describe('Database Client', () => {
     // THEN
     expect(newClient).toBe(oldClient);
   });
-}); 
+});
