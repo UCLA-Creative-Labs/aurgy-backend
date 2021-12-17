@@ -18,7 +18,6 @@ carefully and, if there is anything that isn't up-to-date, feel free to submit a
   - [StyleLint](#StyleLint)
 - [Pipeline](#Pipeline)
   - [Mergify](#Mergify)
-  - [Netlify](#Netlify)
 
 ## Getting Started
 
@@ -152,9 +151,3 @@ Key Aspects:
 - Mergify automatically dismisses stale reviews
 
 See our [`.mergify.yml`](.mergify.yml) file for more info.
-
-### Netlify
-
-We use [Netlify](https://www.netlify.com/) to host our website. Netlify has a really cool feature that let's you see a preview of the your changes. Make sure to reference the feature or bug fixes in your commit description so that reviewers can verify and test your changes.
-
-Follow this [blog post](https://www.netlify.com/blog/2016/07/20/introducing-deploy-previews-in-netlify/) for more information. 
