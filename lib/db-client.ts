@@ -88,9 +88,22 @@ export class DbClient {
 
   /**
    * Open a database collection given the collection name.
-   * @param collectionName the name of the collection
+   *
+   * NOTE: When the app is not in production, this will look
+   * for a collection with the prefix 'test_'.
+   *
+   * For example:
+   * ```
+   * client.openCollection('users')  // looks up `test_users`
+   * ```
+   *
+   * @param pCollectionName the name of the collection
    */
-  public async openCollection(collectionName: string): Promise<oracledb.SodaCollection> {
+  public async openCollection(pCollectionName: string): Promise<oracledb.SodaCollection> {
+    const collectionName = process.env.NODE_ENV === 'PROD'
+      ? pCollectionName
+      : `test_${pCollectionName}`;
+
     if (this.collections[collectionName] != null)
       return this.collections[collectionName];
 
@@ -101,6 +114,19 @@ export class DbClient {
     this.collections[collectionName] = collection;
 
     return collection;
+  }
+
+  /**
+   * Query for a document by the id and collection name
+   *
+   * @param id the id of the document
+   * @param collectionName the collection to query from
+   * @returns the soda document associated with the query
+   */
+  public async findDocument(id: string, collectionName: string): Promise<oracledb.SodaDocument | null> {
+    const collection = await this.openCollection(collectionName);
+    const item = await collection.find().filter({id}).getOne();
+    return item ?? null;
   }
 }
 
