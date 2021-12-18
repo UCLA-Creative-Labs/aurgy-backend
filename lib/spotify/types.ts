@@ -1,3 +1,5 @@
+import { IArtist } from './song';
+
 export type TokenResponse = {
   'access_token': string,
 };
@@ -34,4 +36,18 @@ export function isUserInfoResponse(res: any): res is UserInfoResponse {
     'product' in res &&
     'uri' in res
   );
+}
+
+export interface SongResponse{
+  id:string;
+  name: string;
+  href: string;
+  uri: string;
+  popularity: number;
+  duration_ms: number;
+  artists: Array<IArtist>;
+}
+
+export interface TopSongResponse{
+  items: SongResponse[];
 }
