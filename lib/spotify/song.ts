@@ -6,7 +6,7 @@ export interface IArtist{
 
 export interface ISong{
   name: string;
-  href: string; 
+  href: string;
   uri: string;
   popularity: number;
   duration: number;
@@ -16,7 +16,7 @@ export interface ISong{
 export interface SongResponse{
   id:string;
   name: string;
-  href: string; 
+  href: string;
   uri: string;
   popularity: number;
   duration_ms: number;

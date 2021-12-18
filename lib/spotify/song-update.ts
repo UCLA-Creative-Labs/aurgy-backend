@@ -15,7 +15,7 @@ export async function getTopSongs(accessToken: string){
   const responses = await Promise.all([getSongs(0), getSongs(49)]);
   responses.forEach((res: Response) => {
     if (!res.ok) throw new HTTPResponseError(res);
-  })
+  });
 
   const data = await Promise.all(responses.map(res => res.json()));
 
@@ -27,7 +27,8 @@ export async function getTopSongs(accessToken: string){
         return arr;
       }, []);
 
-      acc[s.id] = {name: s.name, href: s.href, uri: s.uri, popularity: s.popularity, duration: s.duration_ms, artists: artistNames};
+      acc[s.id] = {name: s.name, href: s.href, uri: s.uri, popularity: s.popularity,
+        duration: s.duration_ms, artists: artistNames};
     });
     return acc;
   }, {});
