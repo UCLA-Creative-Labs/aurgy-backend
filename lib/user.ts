@@ -68,10 +68,18 @@ export class User extends DbItem implements IUser {
     return new User(id, content, true);
   }
 
+  /**
+   * Verify the user exists in the database and that the refresh token match
+   *
+   * @param id the user id
+   * @param refreshToken the refresh token
+   *
+   * @returns the status to return and user if its verified
+   */
   public static async verifyRequest(id: string, refreshToken: string): Promise<VerifiedUser> {
     const user = await User.fromId(id);
     if (!user) return { status: 404 };
-    else if (user.id !== id || user.refreshToken !== refreshToken) return { status: 403 };
+    else if (user.refreshToken !== refreshToken) return { status: 403 };
     else return { status: 200, user };
   }
 
@@ -100,7 +108,7 @@ export class User extends DbItem implements IUser {
   */
   public readonly country: string;
 
-   /**
+  /**
     * A user's top songs
     */
   get topSongs(): string[] {
