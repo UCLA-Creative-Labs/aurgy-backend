@@ -63,7 +63,7 @@ export class DbClient {
   private _soda?: oracledb.SodaDatabase;
 
   public constructor() {
-    oracledb.initOracleClient({configDir: '/home/opc/instantclient_19_10' });
+    oracledb.initOracleClient({configDir: '/home/ubuntu/instantclient_21_4' });
     this._password = process.env.PASSWORD ?? '';
     this._connectionString = process.env.CONNECTION_STRING ?? '';
     this.collections = {};
