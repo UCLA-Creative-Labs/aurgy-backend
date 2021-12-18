@@ -33,7 +33,10 @@ module.exports = {
     // Variables should be used
     '@typescript-eslint/no-unused-vars': [
       'error',
-      { argsIgnorePattern: '^_' },
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
     ],
 
     // 2 space indentation

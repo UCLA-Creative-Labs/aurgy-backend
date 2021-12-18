@@ -130,7 +130,7 @@ export class User extends DbItem implements IUser {
    * @returns a database entry
    */
   public toJson(): DatabaseEntry {
-    const {collectionName, ...entry} = this;
+    const {collectionName: _c, ...entry} = this;
     return { ...entry, refreshToken: this.refreshToken };
   }
 
@@ -150,7 +150,7 @@ export class User extends DbItem implements IUser {
    * @returns return a client response
    */
   public getClientResponse(): ClientResponse {
-    const {collectionName, topSongs, uri, ...response} = this;
+    const {collectionName: _c, topSongs: _t, uri: _u, ...response} = this;
     return response;
   }
 }
