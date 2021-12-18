@@ -76,38 +76,42 @@ export class User extends DbItem implements IUser {
   }
 
   /**
-   * A user's top songs
-   */
-  public readonly topSongs: string[];
-
-  /**
    * The user's spotify subscription type: premium/free
    */
   public readonly accountType: SpotifySubscriptionType;
 
   /**
-   * The user's name
-   */
+  * The user's name
+  */
   public readonly name: string;
 
   /**
-   * The user's uniform resource identifier
-   */
+  * The user's uniform resource identifier
+  */
   public readonly uri: string;
 
   /**
-   * The user's profile images
-   */
+  * The user's profile images
+  */
   public readonly images: string[];
 
   /**
-   * The user's country
-   */
+  * The user's country
+  */
   public readonly country: string;
 
+   /**
+    * A user's top songs
+    */
+  get topSongs(): string[] {
+    return this.#topSongs;
+  }
+
+  #topSongs: string[];
+
   /**
-   * The refresh token for the user
-   */
+  * The refresh token for the user
+  */
   get refreshToken(): string {
     return this.#refreshToken;
   }
@@ -117,7 +121,7 @@ export class User extends DbItem implements IUser {
   constructor(id: string, props: UserProps, existsInDb = false) {
     super(id, COLLECTION.USERS, existsInDb);
     this.#refreshToken = props.refreshToken;
-    this.topSongs = props.topSongs ?? [];
+    this.#topSongs = props.topSongs ?? [];
     this.name = props.name;
     this.accountType = props.accountType;
     this.uri = props.uri;
@@ -131,7 +135,7 @@ export class User extends DbItem implements IUser {
    */
   public toJson(): DatabaseEntry {
     const {collectionName: _c, ...entry} = this;
-    return { ...entry, refreshToken: this.refreshToken };
+    return { ...entry, refreshToken: this.refreshToken, topSongs: this.topSongs };
   }
 
   /**
@@ -150,7 +154,7 @@ export class User extends DbItem implements IUser {
    * @returns return a client response
    */
   public getClientResponse(): ClientResponse {
-    const {collectionName: _c, topSongs: _t, uri: _u, ...response} = this;
+    const {collectionName: _c, uri: _u, ...response} = this;
     return response;
   }
 }
