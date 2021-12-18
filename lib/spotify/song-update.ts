@@ -3,7 +3,7 @@ import { HTTPResponseError } from '../../utils/errors';
 import { IArtist, ISong } from './song';
 import { SongResponse, TopSongResponse } from './types';
 
-export async function getTopSongs(accessToken: string){
+export async function getTopSongs(accessToken: string): Promise<Record<string, ISong>>{
   function getSongs(offset: number){
     return fetch(`https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=medium_term&offset=${offset}`, {
       method: 'GET',
