@@ -109,14 +109,14 @@ export class User extends DbItem implements IUser {
    * The refresh token for the user
    */
   get refreshToken(): string {
-    return this._refreshToken;
+    return this.#refreshToken;
   }
 
-  private _refreshToken: string;
+  #refreshToken: string;
 
   constructor(id: string, props: UserProps, existsInDb = false) {
     super(id, COLLECTION.USERS, existsInDb);
-    this._refreshToken = this.refreshToken;
+    this.#refreshToken = props.refreshToken;
     this.topSongs = props.topSongs ?? [];
     this.name = props.name;
     this.accountType = props.accountType;
@@ -130,7 +130,9 @@ export class User extends DbItem implements IUser {
    * @returns a database entry
    */
   public toJson(): DatabaseEntry {
-    return this as DatabaseEntry;
+    const entry = this as DatabaseEntry;
+    console.log(entry)
+    return entry;
   }
 
   /**

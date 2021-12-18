@@ -31,12 +31,15 @@ export abstract class DbItem implements IDbItem {
    * Useful for determining whether or not to insert or replace an item.
    */
   get existsInDb(): boolean {
-    return this._existsInDb;
+    return this.#existsInDb;
   }
 
-  constructor(id: string, collectionName: COLLECTION, private _existsInDb = false) {
+  #existsInDb: boolean;
+
+  constructor(id: string, collectionName: COLLECTION, _existsInDb = false) {
     this.id = id;
     this.collectionName = collectionName;
+    this.#existsInDb = _existsInDb;
   }
 
   /**

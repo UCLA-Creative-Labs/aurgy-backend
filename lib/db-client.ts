@@ -151,7 +151,7 @@ export class DbClient {
         void collection.insertMany(partitions.insert.map(item => item.toJson()));
       if (partitions.replace.length > 0) {
         partitions.replace.forEach((item) => {
-          void collection.find().filter({id: item.id}).replaceOne(item);
+          void collection.find().filter({id: item.id}).replaceOne(item.toJson());
         });
       }
     });
