@@ -33,7 +33,10 @@ module.exports = {
     // Variables should be used
     '@typescript-eslint/no-unused-vars': [
       'error',
-      { argsIgnorePattern: '^_' },
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
     ],
 
     // 2 space indentation
@@ -67,7 +70,8 @@ module.exports = {
     'no-duplicate-imports': ['error'],
 
     // Cannot shadow names
-    'no-shadow': ['error'],
+    'no-shadow': 'off',
+    '@typescript-eslint/no-shadow': ['error'],
 
     // Required spacing in property declarations (copied from TSLint, defaults are good)
     'key-spacing': ['error'],
