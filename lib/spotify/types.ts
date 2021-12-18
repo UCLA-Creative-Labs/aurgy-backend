@@ -25,25 +25,3 @@ export function isUserInfoResponse(res: any): res is UserInfoResponse {
     'uri' in res
   );
 }
-
-type TopSongs = {
-  'name': string,
-  'href': string, 
-  'uri': string, 
-  'popularity': number, 
-  'artists': Array<string>,
-};
-
-export type TopSongsResponse = {
-  [key: string]: TopSongs,
-};
-
-export function isTopSongsResponse(res: any): res is TopSongsResponse {
-  return (
-    'name' in res &&
-    'href' in res &&
-    'uri' in res &&
-    'popularity' in res &&
-    'artists' in res
-  );
-}
