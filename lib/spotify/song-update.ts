@@ -1,6 +1,7 @@
 import fetch, {Response} from 'node-fetch';
 import { HTTPResponseError } from '../../utils/errors';
-import { IArtist, ISong, SongResponse, TopSongResponse } from './song';
+import { IArtist, ISong } from './song';
+import { SongResponse, TopSongResponse } from './types';
 
 export async function getTopSongs(accessToken: string){
   function getSongs(offset: number){
@@ -19,16 +20,16 @@ export async function getTopSongs(accessToken: string){
 
   const data = await Promise.all(responses.map(res => res.json()));
 
-  const songMap = data.reduce((acc: Record<string, ISong>, d: TopSongResponse) => {
-    d.items.forEach((s: SongResponse) => {
-      if (s.id in acc) return;
-      const artistNames = s.artists.reduce((arr: IArtist[], art: IArtist) => {
-        arr.push({name: art.name, id: art.id, uri: art.uri});
+  const songMap = data.reduce((acc: Record<string, ISong>, topSongInfo: TopSongResponse) => {
+    topSongInfo.items.forEach((song: SongResponse) => {
+      if (song.id in acc) return;
+      const artistNames = song.artists.reduce((arr: IArtist[], artist: IArtist) => {
+        arr.push({name: artist.name, id: artist.id, uri: artist.uri});
         return arr;
       }, []);
 
-      acc[s.id] = {name: s.name, href: s.href, uri: s.uri, popularity: s.popularity,
-        duration: s.duration_ms, artists: artistNames};
+      acc[song.id] = {name: song.name, href: song.href, uri: song.uri, popularity: song.popularity,
+        duration: song.duration_ms, artists: artistNames};
     });
     return acc;
   }, {});
