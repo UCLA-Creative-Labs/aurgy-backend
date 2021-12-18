@@ -1,38 +1,19 @@
-import {getClient} from './db-client';
+import { getClient } from "./db-client";
+import { COLLECTION } from "./private/enums";
 
 /**
  * The interface for a database item
  */
-export interface IDbItem extends Record<string, any> {
+export interface IDbItem {
   readonly id: string;
-}
-
-/**
- * The attributes required to query a database item
- */
-export interface DbItemAttributes {
-  /**
-   * The id of the database item
-   */
-  readonly id: string;
-
-  /**
-   * The collection the item lives in
-   */
   readonly collectionName: string;
+  readonly existsInDb: boolean;
 }
 
 /**
  * A database item. All database items should extend this class.
  */
-export class DbItem implements IDbItem {
-
-  public static async findDbItemFromAttributes({id, collectionName}: DbItemAttributes): Promise<IDbItem | null> {
-    const client = await getClient();
-    const content = (await client.findDocument(collectionName, id))?.getContent();
-    return content as IDbItem ?? null;
-  }
-
+export abstract class DbItem implements IDbItem {
   /**
    * The id of the item in a collection
    */
@@ -41,10 +22,32 @@ export class DbItem implements IDbItem {
   /**
    * The collection this database item belongs to
    */
-  public readonly collectionName: string;
+  public readonly collectionName: COLLECTION;
 
-  constructor(id: string, collectionName: string) {
+  /**
+   * Check if the object exists within the database already
+   * 
+   * Useful for determining whether or not to insert or replace an item.
+   */
+  get existsInDb(): boolean {
+    return this._existsInDb;
+  }
+
+  constructor(id: string, collectionName: COLLECTION, private _existsInDb = false) {
     this.id = id;
     this.collectionName = collectionName;
   }
+
+  /**
+   * Writes the database item to the database
+   */
+  public async writeToDatabase(): Promise<void> {
+    const client = await getClient();
+    client.writeDbItems(this);
+  }
+
+  /**
+   * Convert the class into a JSON object for storage
+   */
+  public abstract toJson(): Record<string, any>;
 }

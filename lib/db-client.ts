@@ -1,5 +1,6 @@
 import oracledb from 'oracledb';
 import {logger} from '../utils';
+import { DbItem } from './db-item';
 
 // To make sure all writes are saved
 oracledb.autoCommit = true;
@@ -89,20 +90,10 @@ export class DbClient {
   /**
    * Open a database collection given the collection name.
    *
-   * NOTE: When the app is not in production, this will look
-   * for a collection with the prefix 'test_'.
-   *
-   * For example:
-   * ```
-   * client.openCollection('users')  // looks up `test_users`
-   * ```
-   *
    * @param pCollectionName the name of the collection
    */
   public async openCollection(pCollectionName: string): Promise<oracledb.SodaCollection> {
-    const collectionName = process.env.NODE_ENV === 'PROD'
-      ? pCollectionName
-      : `test_${pCollectionName}`;
+    const collectionName = this.correctCollectionName(pCollectionName);
 
     if (this.collections[collectionName] != null)
       return this.collections[collectionName];
@@ -120,13 +111,50 @@ export class DbClient {
    * Query for a document by the id and collection name
    *
    * @param id the id of the document
-   * @param collectionName the collection to query from
+   * @param pCollectionName the collection to query from
    * @returns the soda document associated with the query
    */
-  public async findDocument(id: string, collectionName: string): Promise<oracledb.SodaDocument | null> {
+  public async findDbItem(pCollectionName: string, id: string): Promise<oracledb.SodaDocument | null> {
+    const collectionName = this.correctCollectionName(pCollectionName);
     const collection = await this.openCollection(collectionName);
     const item = await collection.find().filter({id}).getOne();
     return item ?? null;
+  }
+
+  /**
+   * Write database items to a database
+   *
+   * @param items the items to insert into the database
+   */
+  public async writeDbItems(...items: DbItem[]): Promise<void> {
+    const partitionedItems = items.reduce((acc: Record<string, DbItem[]>, item) => {
+      if (!(item.collectionName in acc)) acc[item.collectionName] = [];
+      acc[item.collectionName].push(item);
+      return acc;
+    }, {});
+    Object.entries(partitionedItems).forEach(async ([pCollectionName, items]) => {
+      const collectionName = this.correctCollectionName(pCollectionName);
+      const collection = await this.openCollection(collectionName);
+      collection.insertMany(items.map(item => item.toJson()));
+    });
+  }
+
+  /**
+   * When the app is not in production, this will look
+   * for a collection with the prefix 'test_'.
+   *
+   * For example:
+   * ```
+   * client.openCollection('users')  // looks up `test_users`
+   * ```
+   * 
+   * @param collectionName the name of the collection
+   * @returns the correct form of the collection name
+   */
+  private correctCollectionName(collectionName: string): string {
+    return process.env.NODE_ENV === 'PROD'
+      ? collectionName
+      : `test_${collectionName}`;
   }
 }
 
