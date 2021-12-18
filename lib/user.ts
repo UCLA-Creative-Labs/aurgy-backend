@@ -1,17 +1,16 @@
-import { getClient, SpotifySubscriptionType } from ".";
-import { DbItem, IDbItem } from "./db-item";
-import { COLLECTION } from "./private/enums";
+import { getClient, SpotifySubscriptionType } from '.';
+import { DbItem, IDbItem } from './db-item';
+import { COLLECTION } from './private/enums';
 
-export interface IUser extends Omit<UserProps, 'topSongs'>, IDbItem {
-  /**
-   * A user's top songs
-   */
-  readonly topSongs: string[];
-}
-
-type DatabaseEntry = Omit<IUser, 'collectionName'>;
+type DatabaseEntry = Omit<IUser, 'collectionName' | 'existsInDb'>;
+type ClientResponse = Omit<DatabaseEntry, 'topSongs' | 'refreshToken' | 'uri'>;
 
 export interface UserProps {
+  /**
+   * The refresh token for the user
+   */
+  readonly refreshToken: string;
+
   /**
    * A user's top songs
    */
@@ -43,10 +42,19 @@ export interface UserProps {
   readonly country: string;
 }
 
+export interface IUser extends Omit<UserProps, 'topSongs'>, IDbItem {
+  /**
+   * A user's top songs
+   */
+  readonly topSongs: string[];
+}
+
+export type VerifiedUser = { status: 403 | 404, user?: User } | { status: 200, user: User };
+
 /**
  * The class containing a user and their data
  */
- export class User extends DbItem implements IUser {
+export class User extends DbItem implements IUser {
   /**
    * A static function to query for a user from their id
    *
@@ -58,6 +66,13 @@ export interface UserProps {
     if (!document) return null;
     const content: DatabaseEntry = document.getContent() as DatabaseEntry;
     return new User(id, content, true);
+  }
+
+  public static async verifyRequest(id: string, refreshToken: string): Promise<VerifiedUser> {
+    const user = await User.fromId(id);
+    if (!user) return { status: 404 };
+    else if (user.id !== id || user.refreshToken !== refreshToken) return { status: 403 };
+    else return { status: 200, user };
   }
 
   /**
@@ -90,8 +105,18 @@ export interface UserProps {
    */
   public readonly country: string;
 
-  constructor(id: string, props: UserProps, existsInDb: boolean = false) {
+  /**
+   * The refresh token for the user
+   */
+  get refreshToken(): string {
+    return this._refreshToken;
+  }
+
+  private _refreshToken: string;
+
+  constructor(id: string, props: UserProps, existsInDb = false) {
     super(id, COLLECTION.USERS, existsInDb);
+    this._refreshToken = this.refreshToken;
     this.topSongs = props.topSongs ?? [];
     this.name = props.name;
     this.accountType = props.accountType;
@@ -100,7 +125,30 @@ export interface UserProps {
     this.country = props.country;
   }
 
-  public toJson(): Omit<IUser, 'collectionName'> {
-    return this;
+  /**
+   * Converts the object into a form for the database
+   * @returns a database entry
+   */
+  public toJson(): DatabaseEntry {
+    return this as DatabaseEntry;
+  }
+
+  /**
+   * Updates a user's top songs
+   */
+  public updateTopSongs(): void {
+    // Get user access token
+    // Get top songs from user
+    // Update the top songs portion of this
+    void this.writeToDatabase();
+  }
+
+  /**
+   * Formats the data in a client friendly manner
+   *
+   * @returns return a client response
+   */
+  public getClientResponse(): ClientResponse {
+    return this as ClientResponse;
   }
 }

@@ -42,7 +42,7 @@ export class DbClient {
   /**
    * Database collections where the key is the collection name.
    */
-  public readonly collections: {[name: string]: oracledb.SodaCollection};
+  public readonly collections: Record<string, oracledb.SodaCollection>;
 
   /**
    * The password for the oracle db connection.
@@ -90,10 +90,20 @@ export class DbClient {
   /**
    * Open a database collection given the collection name.
    *
+   * When the app is not in production, this will look
+   * for a collection with the prefix 'test_'.
+   *
+   * For example:
+   * ```
+   * client.openCollection('users')  // looks up `test_users`
+   * ```
+   *
    * @param pCollectionName the name of the collection
    */
   public async openCollection(pCollectionName: string): Promise<oracledb.SodaCollection> {
-    const collectionName = this.correctCollectionName(pCollectionName);
+    const collectionName = process.env.NODE_ENV === 'PROD'
+      ? pCollectionName
+      : `test_${pCollectionName}`;
 
     if (this.collections[collectionName] != null)
       return this.collections[collectionName];
@@ -111,11 +121,10 @@ export class DbClient {
    * Query for a document by the id and collection name
    *
    * @param id the id of the document
-   * @param pCollectionName the collection to query from
+   * @param collectionName the collection to query from
    * @returns the soda document associated with the query
    */
-  public async findDbItem(pCollectionName: string, id: string): Promise<oracledb.SodaDocument | null> {
-    const collectionName = this.correctCollectionName(pCollectionName);
+  public async findDbItem(collectionName: string, id: string): Promise<oracledb.SodaDocument | null> {
     const collection = await this.openCollection(collectionName);
     const item = await collection.find().filter({id}).getOne();
     return item ?? null;
@@ -127,34 +136,35 @@ export class DbClient {
    * @param items the items to insert into the database
    */
   public async writeDbItems(...items: DbItem[]): Promise<void> {
-    const partitionedItems = items.reduce((acc: Record<string, DbItem[]>, item) => {
-      if (!(item.collectionName in acc)) acc[item.collectionName] = [];
-      acc[item.collectionName].push(item);
+    const partitionedItems = items.reduce((acc: Record<string, PartitionedItems>, item) => {
+      if (!(item.collectionName in acc)) {
+        acc[item.collectionName] = { replace: [], insert: [] };
+      }
+      const partition = item.existsInDb ? 'replace' : 'insert';
+      acc[item.collectionName][partition].push(item);
       return acc;
     }, {});
-    Object.entries(partitionedItems).forEach(async ([pCollectionName, items]) => {
-      const collectionName = this.correctCollectionName(pCollectionName);
+
+    Object.entries(partitionedItems).forEach(async ([collectionName, partitions]) => {
       const collection = await this.openCollection(collectionName);
-      collection.insertMany(items.map(item => item.toJson()));
+      if (partitions.insert.length > 0)
+        void collection.insertMany(partitions.insert.map(item => item.toJson()));
+      if (partitions.replace.length > 0) {
+        partitions.replace.forEach((item) => {
+          void collection.find().filter({id: item.id}).replaceOne(item);
+        });
+      }
     });
   }
 
   /**
-   * When the app is not in production, this will look
-   * for a collection with the prefix 'test_'.
+   * Remove a document by the id and collection name
    *
-   * For example:
-   * ```
-   * client.openCollection('users')  // looks up `test_users`
-   * ```
-   * 
-   * @param collectionName the name of the collection
-   * @returns the correct form of the collection name
+   * @param item the item to delete from the database
    */
-  private correctCollectionName(collectionName: string): string {
-    return process.env.NODE_ENV === 'PROD'
-      ? collectionName
-      : `test_${collectionName}`;
+  public async deleteDbItem(item: DbItem): Promise<oracledb.SodaRemoveResult> {
+    const collection = await this.openCollection(item.collectionName);
+    return collection.find().filter({id: item.id}).remove();
   }
 }
 
@@ -168,5 +178,10 @@ export async function getClient(): Promise<DbClient> {
   catch (err) { logger.error(err); }
 
   return CLIENT;
+}
+
+type PartitionedItems = {
+  replace: DbItem[],
+  insert: DbItem[],
 }
 

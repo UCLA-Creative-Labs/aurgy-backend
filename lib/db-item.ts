@@ -1,5 +1,6 @@
-import { getClient } from "./db-client";
-import { COLLECTION } from "./private/enums";
+import oracledb from 'oracledb';
+import { getClient } from './db-client';
+import { COLLECTION } from './private/enums';
 
 /**
  * The interface for a database item
@@ -26,7 +27,7 @@ export abstract class DbItem implements IDbItem {
 
   /**
    * Check if the object exists within the database already
-   * 
+   *
    * Useful for determining whether or not to insert or replace an item.
    */
   get existsInDb(): boolean {
@@ -39,11 +40,19 @@ export abstract class DbItem implements IDbItem {
   }
 
   /**
-   * Writes the database item to the database
+   * Writes this database item to the database
    */
   public async writeToDatabase(): Promise<void> {
     const client = await getClient();
-    client.writeDbItems(this);
+    return client.writeDbItems(this);
+  }
+
+  /**
+   * Remove this database item from the database
+   */
+  public async removeFromDatabase(): Promise<oracledb.SodaRemoveResult> {
+    const client = await getClient();
+    return client.deleteDbItem(this);
   }
 
   /**
