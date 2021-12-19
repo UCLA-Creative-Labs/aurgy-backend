@@ -1,5 +1,6 @@
 import oracledb from 'oracledb';
 import {logger} from '../utils';
+import { DbItem } from './db-item';
 
 // To make sure all writes are saved
 oracledb.autoCommit = true;
@@ -41,7 +42,7 @@ export class DbClient {
   /**
    * Database collections where the key is the collection name.
    */
-  public readonly collections: {[name: string]: oracledb.SodaCollection};
+  public readonly collections: Record<string, oracledb.SodaCollection>;
 
   /**
    * The password for the oracle db connection.
@@ -62,7 +63,7 @@ export class DbClient {
   private _soda?: oracledb.SodaDatabase;
 
   public constructor() {
-    oracledb.initOracleClient({configDir: '/home/opc/instantclient_19_10' });
+    oracledb.initOracleClient({configDir: '/opt/oracle/instantclient' });
     this._password = process.env.PASSWORD ?? '';
     this._connectionString = process.env.CONNECTION_STRING ?? '';
     this.collections = {};
@@ -89,7 +90,7 @@ export class DbClient {
   /**
    * Open a database collection given the collection name.
    *
-   * NOTE: When the app is not in production, this will look
+   * When the app is not in production, this will look
    * for a collection with the prefix 'test_'.
    *
    * For example:
@@ -123,10 +124,47 @@ export class DbClient {
    * @param collectionName the collection to query from
    * @returns the soda document associated with the query
    */
-  public async findDocument(id: string, collectionName: string): Promise<oracledb.SodaDocument | null> {
+  public async findDbItem(collectionName: string, id: string): Promise<oracledb.SodaDocument | null> {
     const collection = await this.openCollection(collectionName);
     const item = await collection.find().filter({id}).getOne();
     return item ?? null;
+  }
+
+  /**
+   * Write database items to a database
+   *
+   * @param items the items to insert into the database
+   */
+  public async writeDbItems(...items: DbItem[]): Promise<void> {
+    const partitionedItems = items.reduce((acc: Record<string, PartitionedItems>, item) => {
+      if (!(item.collectionName in acc)) {
+        acc[item.collectionName] = { replace: [], insert: [] };
+      }
+      const partition = item.existsInDb ? 'replace' : 'insert';
+      acc[item.collectionName][partition].push(item);
+      return acc;
+    }, {});
+
+    Object.entries(partitionedItems).forEach(async ([collectionName, partitions]) => {
+      const collection = await this.openCollection(collectionName);
+      if (partitions.insert.length > 0)
+        void collection.insertMany(partitions.insert.map(item => item.toJson()));
+      if (partitions.replace.length > 0) {
+        partitions.replace.forEach((item) => {
+          void collection.find().filter({id: item.id}).replaceOne(item.toJson());
+        });
+      }
+    });
+  }
+
+  /**
+   * Remove a document by the id and collection name
+   *
+   * @param item the item to delete from the database
+   */
+  public async deleteDbItem(item: DbItem): Promise<oracledb.SodaRemoveResult> {
+    const collection = await this.openCollection(item.collectionName);
+    return collection.find().filter({id: item.id}).remove();
   }
 }
 
@@ -140,5 +178,10 @@ export async function getClient(): Promise<DbClient> {
   catch (err) { logger.error(err); }
 
   return CLIENT;
+}
+
+type PartitionedItems = {
+  replace: DbItem[],
+  insert: DbItem[],
 }
 
