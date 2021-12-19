@@ -380,6 +380,9 @@ The spotify
 
 ## Express Endpoints
 
+In our current MVP state, our express endpoints list are small, as the interaction between client
+and server is small. Below structures how the endpoints work:
+
 | Verb   | Route        | Description                                                         |
 | ------ | ------------ | ------------------------------------------------------------------- |
 | POST   | `/me`        | Creates an account for the user and returns the user's data         |
@@ -394,11 +397,94 @@ The spotify
 | GET    | `/lobby/:id` | Get lobby specific info                                             |
 | DELETE | `/lobby/:id` | Leave a lobby                                                       |
 
+**Note**
+
+All content types will be in the `application/json` form:
+
+| Header Parameter | Description                        |
+| ---------------- | ---------------------------------- |
+| Content-Type     | Always set to `application/json`   |
+
 ### POST /me
+
+This POST request serves as a method for a user to login if there is no cookie information stored
+on the client. When a user **successfully** logs in, Aurgy will send the client the user's info
+that will be used to populate the client.
+
+| Request Body Parameter | Description                        |
+| ---------------------- | ---------------------------------- |
+| refreshToken           | A user's refresh token             |
+
+**Responses**
+
+| Status Code | Description                        |
+| ----------- | ---------------------------------- |
+| 200         | A user response (detailed below)   |
+| 401         | A bad refresh token                |
+
+**User Response**
+
+The response sent to the user if the authentication is successful.
+
+```json
+{
+  "name": "string",          // The user's name
+  "id": "string",            // The user's spotify id
+  "accountType": "string",   // The user's spotify plan: premium or free
+  "country": "string",       // The user's country code
+  "images": "string[]",      // Any links to the user's images
+}
+```
 
 ### GET /me
 
+The GET request is a method for the client to verify a user's information through the cookies stored
+on the client.
+
+| Request Body Parameter | Description                        |
+| ---------------------- | ---------------------------------- |
+| id                     | The user's spotify id              |
+| refreshToken           | A user's refresh token             |
+
+**Responses**
+
+| Status Code | Description                                   |
+| ----------- | --------------------------------------------- |
+| 200         | A user response (detailed below)              |
+| 401         | Refresh token doesn't match database entry    |
+| 404         | User is not found in database                 |
+
+**User Response**
+
+The response sent to the user if the authentication is successful.
+
+```json
+{
+  "name": "string",          // The user's name
+  "id": "string",            // The user's spotify id
+  "accountType": "string",   // The user's spotify plan: premium or free
+  "country": "string",       // The user's country code
+  "images": "string[]",      // Any links to the user's images
+}
+```
+
 ### DELETE /me
+
+The DELETE request is a method for the client to delete their account. This will result in the entire
+entry for the user to be deleted.
+
+| Request Body Parameter | Description                        |
+| ---------------------- | ---------------------------------- |
+| id                     | The user's spotify id              |
+| refreshToken           | A user's refresh token             |
+
+**Responses**
+
+| Status Code | Description                                       |
+| ----------- | ------------------------------------------------- |
+| 200         | User has been succesfully deleted from database   |
+| 401         | Refresh token doesn't match database entry        |
+| 404         | User is not found in database                     |
 
 ### POST /lobby
 
