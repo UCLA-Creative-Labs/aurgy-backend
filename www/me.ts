@@ -18,7 +18,7 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
       logger.error(err);
     }
     return null;
-  }
+  };
 
   const userInfo = await getUserInfo();
 
