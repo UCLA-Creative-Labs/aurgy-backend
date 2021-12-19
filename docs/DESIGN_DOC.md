@@ -29,6 +29,7 @@ of the API and combat them in an ad hoc fashion.
   * [GET /lobby](#GET-lobby)
   * [DELETE /lobby](#DELETE-lobby)
   * [POST /lobby/:id](#POST-lobbyid)
+  * [PATCH /lobby/:id](#PATCH-lobbyid)
   * [GET /lobby/:id](#GET-lobbyid)
   * [DELETE /lobby/:id](#DELETE-lobbyid)
 * [Playlist Generation](#Playlist-Generation)
@@ -298,6 +299,16 @@ export class User extends DbItem implements IUser {
    * The user's country
    */
   public readonly country: string;
+
+  /**
+   * The lobbies the user manages
+   */ 
+  public readonly managedLobbies: Lobbies[];
+
+  /**
+   * The lobbies the user participates in
+   */
+  public readonly participatingLobbies: Lobbies[]
 }
 ```
 
@@ -383,19 +394,20 @@ The spotify
 In our current MVP state, our express endpoints list are small, as the interaction between client
 and server is small. Below structures how the endpoints work:
 
-| Verb   | Route        | Description                                                         |
-| ------ | ------------ | ------------------------------------------------------------------- |
-| POST   | `/me`        | Creates an account for the user and returns the user's data         |
-| GET    | `/me`        | Login given user cookies and verifies the data aligns w/ the server |
-| DELETE | `/me`        | Removes a user's info from the database                             |
-| ------ | ------------ | ------------------------------------------------------------------- |
-| POST   | `/lobby`     | Creates a new lobby and returns the lobby id w/ lobby data          |
-| GET    | `/lobby`     | Returns the lobbies a user is managing and participating in         |
-| DELETE | `/lobby`     | Deletes a lobby a user owns                                         |
-| ------ | ------------ | ------------------------------------------------------------------- |
-| POST   | `/lobby/:id` | Join a lobby                                                        |
-| GET    | `/lobby/:id` | Get lobby specific info                                             |
-| DELETE | `/lobby/:id` | Leave a lobby                                                       |
+| Verb   | Route                 | Description                                                         |
+| ------ | --------------------- | ------------------------------------------------------------------- |
+| POST   | `/me`                 | Creates an account for the user and returns the user's data         |
+| GET    | `/me`                 | Login given user cookies and verifies the data aligns w/ the server |
+| DELETE | `/me`                 | Removes a user's info from the database                             |
+| ------ | --------------------- | ------------------------------------------------------------------- |
+| POST   | `/lobby`              | Creates a new lobby and returns the lobby id w/ lobby data          |
+| GET    | `/lobby`              | Returns the lobbies a user is managing and participating in         |
+| ------ | --------------------- | ------------------------------------------------------------------- |
+| POST   | `/lobby/:id`          | Join a lobby                                                        |
+| PATCH  | `/lobby/:id`          | Update a lobbies information                                        |
+| GET    | `/lobby/:id`          | Get lobby specific info                                             |
+| DELETE | `/lobby/:id`          | Delete a lobby                                                      |
+| DELETE | `/lobby/:id/user/:id` | Delete a user from a lobby                                          |
 
 **Note**
 
@@ -404,6 +416,8 @@ All content types will be in the `application/json` form:
 | Header Parameter | Description                        |
 | ---------------- | ---------------------------------- |
 | Content-Type     | Always set to `application/json`   |
+
+---
 
 ### POST /me
 
@@ -416,11 +430,11 @@ that will be used to populate the client.
 | refreshToken           | A user's refresh token             |
 
 **Responses**
-
+ 
 | Status Code | Description                        |
 | ----------- | ---------------------------------- |
 | 200         | A user response (detailed below)   |
-| 401         | A bad refresh token                |
+| 403         | A bad refresh token                |
 
 **User Response**
 
@@ -435,6 +449,8 @@ The response sent to the user if the authentication is successful.
   "images": "string[]",      // Any links to the user's images
 }
 ```
+
+---
 
 ### GET /me
 
@@ -451,7 +467,7 @@ on the client.
 | Status Code | Description                                   |
 | ----------- | --------------------------------------------- |
 | 200         | A user response (detailed below)              |
-| 401         | Refresh token doesn't match database entry    |
+| 403         | Refresh token doesn't match database entry    |
 | 404         | User is not found in database                 |
 
 **User Response**
@@ -468,6 +484,8 @@ The response sent to the user if the authentication is successful.
 }
 ```
 
+---
+
 ### DELETE /me
 
 The DELETE request is a method for the client to delete their account. This will result in the entire
@@ -483,20 +501,186 @@ entry for the user to be deleted.
 | Status Code | Description                                       |
 | ----------- | ------------------------------------------------- |
 | 200         | User has been succesfully deleted from database   |
-| 401         | Refresh token doesn't match database entry        |
+| 403         | Refresh token doesn't match database entry        |
 | 404         | User is not found in database                     |
+
+---
 
 ### POST /lobby
 
+The POST request for `/lobby` serves as a way to create a lobby. Aurgy will then
+return the lobby information. In order to understand who is making the request,
+we will be sending both the id and the refresh token of the user.
+
+| Request Body Parameter | Description                        |
+| ---------------------- | ---------------------------------- |
+| lobbyName              | The name of the lobby              |
+| theme                  | The theme of the lobby             |
+| id                     | The user's spotify id              |
+| refreshToken           | A user's refresh token             |
+
+**Responses**
+
+| Status Code | Description                                                                         |
+| ----------- | ----------------------------------------------------------------------------------- |
+| 200         | User has been succesfully deleted from database                                     |
+| 403         | User is authentication through refresh token is invalid                             |
+| 404         | User is not found in database                                                       |
+| 406         | User has exceeded their lobby count, the name is invalid, or the theme is invalid   | 
+
+**Lobby Response**
+
+The response sent to the user regarding the lobby information.
+
+```json
+{
+  "name": "string",      // The lobby name
+  "id": "string",        // The lobby id
+}
+```
+
+---
+
 ### GET /lobby
 
-### DELETE /lobby
+The GET request for `/lobby` is a way for the user to get what lobbies they are in.
+
+| Request Body Parameter | Description                        |
+| ---------------------- | ---------------------------------- |
+| id                     | The user's spotify id              |
+| refreshToken           | A user's refresh token             |
+
+**Responses**
+
+| Status Code | Description                                                    |
+| ----------- | -------------------------------------------------------------- |
+| 200         | User has been authenticated and returns the lobbies response   |
+| 403         | User is authentication through refresh token is invalid        |
+| 404         | User is not found in database                                  |
+
+---
 
 ### POST /lobby/:id
 
+The POST request for `/lobby/:id` is a way for a user to join a lobby.
+
+Verification happens in two stages:
+1. User verification: make sure the user is valid
+2. Lobby token verification: Make sure the lobby token to join the lobby is valid (not expired)
+
+| Request Body Parameter | Description                            |
+| ---------------------- | -------------------------------------- |
+| id                     | The user's spotify id                  |
+| lobbyToken             | The expirable token to verify a lobby  |
+| refreshToken           | A user's refresh token                 |
+
+**Responses**
+
+| Status Code | Description                                                    |
+| ----------- | -------------------------------------------------------------- |
+| 200         | User has been added to the lobby and the lobby info is sent    |
+| 401         | The lobby token is invalid                                     |
+| 403         | User is authentication through refresh token is invalid        |
+| 404         | User is not found in database                                  |
+
+---
+
 ### GET /lobby/:id
 
+The GET request for `/lobby/:id` is a way for a user to get lobby info.
+
+Verification happens in two stages:
+1. User verification: make sure the user is valid
+2. Lobby Status: Make sure the user is part of the lobby
+
+| Request Body Parameter | Description                            |
+| ---------------------- | -------------------------------------- |
+| id                     | The user's spotify id                  |
+| refreshToken           | A user's refresh token                 |
+
+**Responses**
+
+| Status Code | Description                                                    |
+| ----------- | -------------------------------------------------------------- |
+| 200         | User is in lobby and the lobby data is sent to the user        |
+| 403         | User is authentication through refresh token is invalid        |
+| 404         | User is not found in database                                  |
+| 406         | User is not part of the lobby                                  |
+
+---
+
+### PATCH /lobby/:id
+
+The PATCH request for `/lobby/:id` is a way for a user to update lobby information.
+
+Verification happens in two stages:
+1. User verification: make sure the user is valid
+2. Lobby Permissions: Make sure the user is the manager of the lobby
+
+| Request Body Parameter | Description                            |
+| ---------------------- | -------------------------------------- |
+| id                     | The user's spotify id                  |
+| name                   | The lobby name you want                |
+| refreshToken           | A user's refresh token                 |
+
+**Responses**
+
+| Status Code | Description                                         |
+| ----------- | --------------------------------------------------- |
+| 200         | Lobby has been succesfully updated from database    |
+| 403         | Refresh token doesn't match database entry          |
+| 404         | User is not found in database                       |
+| 406         | User is not a manager of the lobby                  |
+
+---
+
 ### DELETE /lobby/:id
+
+The DELETE request for `/lobby/:id` is a way for a user to delete a lobby.
+
+Verification happens in two stages:
+1. User verification: make sure the user is valid
+2. Lobby Permissions: Make sure the user is the manager of the lobby
+
+| Request Body Parameter | Description                            |
+| ---------------------- | -------------------------------------- |
+| id                     | The user's spotify id                  |
+| refreshToken           | A user's refresh token                 |
+
+**Responses**
+
+| Status Code | Description                                         |
+| ----------- | --------------------------------------------------- |
+| 200         | Lobby has been succesfully deleted from database    |
+| 403         | Refresh token doesn't match database entry          |
+| 404         | User is not found in database                       |
+| 406         | User is not a manager of the lobby                  |
+
+---
+
+### DELETE /lobby/:id/user:id
+
+The DELETE request for `/lobby/:id/user/:id` is a way for the manager of a 
+lobby to remove another user from the lobby.
+
+Verification happens in two stages:
+1. User verification: make sure the user is valid
+2. Lobby Permissions: Make sure the user is the manager of the lobby
+
+| Request Body Parameter | Description                            |
+| ---------------------- | -------------------------------------- |
+| id                     | The user's spotify id                  |
+| refreshToken           | A user's refresh token                 |
+
+**Responses**
+
+| Status Code | Description                                         |
+| ----------- | --------------------------------------------------- |
+| 200         | Lobby has been succesfully deleted from database    |
+| 403         | Refresh token doesn't match database entry          |
+| 404         | User is not found in database                       |
+| 406         | User is not a manager of the lobby                  |
+
 
 ## Playlist Generation
 

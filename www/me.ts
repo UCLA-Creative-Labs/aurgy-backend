@@ -1,14 +1,31 @@
 import {Request, Response, Router} from 'express';
+import { UserInfoResponse } from '../lib';
 import { getAccessToken } from '../lib/spotify/access-token';
 import { getMeInfo } from '../lib/spotify/me';
 import { User } from '../lib/user';
+import { logger } from '../utils';
 
 export const me_router = Router();
 
 me_router.post('/', async (req: Request, res: Response): Promise<void> => {
   const refreshToken: string = req.body.refreshToken;
-  const accessToken = await getAccessToken(refreshToken);
-  const userInfo = await getMeInfo(accessToken);
+
+  const getUserInfo = async (): Promise<UserInfoResponse | null> => {
+    try {
+      const accessToken = await getAccessToken(refreshToken);
+      return getMeInfo(accessToken);
+    } catch (err) {
+      logger.error(err);
+    }
+    return null;
+  }
+
+  const userInfo = await getUserInfo();
+
+  if (userInfo === null) {
+    res.status(403).end();
+    return;
+  }
 
   const user = (await User.fromId(userInfo.id)) ?? new User(userInfo.id, {
     refreshToken,
@@ -19,9 +36,9 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
     accountType: userInfo.product,
   });
 
-  if (!user.existsInDb) {
-    void user.writeToDatabase();
-  }
+  // This performs a write to the database so regardless of whether or not
+  // this is an update, we need to write to the database
+  user.updateRefreshToken(refreshToken);
 
   res.status(200).send(user.getClientResponse());
 });
