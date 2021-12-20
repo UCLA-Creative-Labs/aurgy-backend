@@ -5,8 +5,8 @@ import { getClient } from '../lib';
 import {logger} from '../utils';
 
 // ROUTES
-import { POST_login } from './login';
 import { lobby_router } from './lobby';
+import { POST_login } from './login';
 
 const PORT = process.env.PORT ?? 3000;
 
@@ -32,4 +32,3 @@ app.post('/login', POST_login);
 app.use('/lobby', lobby_router);
 
 app.listen(PORT, () => logger.info(`App listening on PORT ${PORT}`));
-
