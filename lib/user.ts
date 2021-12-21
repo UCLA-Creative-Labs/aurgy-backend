@@ -79,8 +79,8 @@ export class User extends DbItem implements IUser {
   public static async verifyRequest(id: string, refreshToken: string): Promise<VerifiedUser> {
     const user = await User.fromId(id);
     if (!user) return { status: 404 };
-    else if (user.refreshToken !== refreshToken) return { status: 403 };
-    else return { status: 200, user };
+    if (user.refreshToken !== refreshToken) return { status: 403 };
+    return { status: 200, user };
   }
 
   /**
@@ -153,6 +153,16 @@ export class User extends DbItem implements IUser {
     // Get user access token
     // Get top songs from user
     // Update the top songs portion of this
+    void this.writeToDatabase();
+  }
+
+  /**
+   * Update the refresh token in the database
+   *
+   * @param refreshToken the refresh token to update
+   */
+  public updateRefreshToken(refreshToken: string): void {
+    this.#refreshToken = refreshToken;
     void this.writeToDatabase();
   }
 
