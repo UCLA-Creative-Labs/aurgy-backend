@@ -38,6 +38,7 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
 
   // This performs a write to the database so regardless of whether or not
   // this is an update, we need to write to the database
+  user.updateTopSongs(false);
   user.updateRefreshToken(refreshToken);
 
   res.status(200).send(user.getClientResponse());
@@ -48,10 +49,12 @@ me_router.get('/', async (req: Request, res: Response): Promise<void> => {
   const id: string = req.body.id;
 
   const {status, user} = await User.verifyRequest(id, refreshToken);
-  if (status === 200 && user)
-    res.status(status).send(user.getClientResponse());
-  else
-    res.status(status).end();
+  if (status !== 200 || !user) {
+    return res.status(status).end();
+  }
+
+  user.updateTopSongs();
+  res.status(status).send(user.getClientResponse());
 });
 
 me_router.delete('/', async (req: Request, res: Response): Promise<void> => {

@@ -1,6 +1,7 @@
-import { getClient, SpotifySubscriptionType } from '.';
+import { getAccessToken, getClient, SpotifySubscriptionType } from '.';
 import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
+import { getTopSongs } from './spotify/top-songs';
 
 type DatabaseEntry = Omit<IUser, 'collectionName' | 'existsInDb'>;
 type ClientResponse = Omit<DatabaseEntry, 'topSongs' | 'refreshToken' | 'uri'>;
@@ -149,11 +150,11 @@ export class User extends DbItem implements IUser {
   /**
    * Updates a user's top songs
    */
-  public updateTopSongs(): void {
-    // Get user access token
-    // Get top songs from user
-    // Update the top songs portion of this
-    void this.writeToDatabase();
+  public async updateTopSongs(writeToDatabase = true): Promise<void> {
+    const accessToken = await getAccessToken(this.refreshToken);
+    const topSongs = await getTopSongs(accessToken);
+    this.#topSongs = Object.keys(topSongs);
+    if (writeToDatabase) void this.writeToDatabase();
   }
 
   /**
@@ -161,9 +162,9 @@ export class User extends DbItem implements IUser {
    *
    * @param refreshToken the refresh token to update
    */
-  public updateRefreshToken(refreshToken: string): void {
+  public updateRefreshToken(refreshToken: string, writeToDatabase = true): void {
     this.#refreshToken = refreshToken;
-    void this.writeToDatabase();
+    if(writeToDatabase) void this.writeToDatabase();
   }
 
   /**
