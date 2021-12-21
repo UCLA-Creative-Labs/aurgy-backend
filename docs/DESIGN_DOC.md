@@ -380,9 +380,13 @@ Below I detailed some spotify interactions that we will most likely need.
 ### Access Token
 
 The most important thing we need is to obtain a user's access token. A user's access
-token can be retrieved through the 
+token can be retrieved through their refresh token. Follow the directions in this
+[article](https://developer.spotify.com/documentation/general/guides/authorization/code-flow/)
+to understand how the authorization flow works and how to refresh an auth token.
 
 ### User Info
+
+
 
 ### User's Top Songs
 
