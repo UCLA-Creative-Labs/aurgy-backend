@@ -22,7 +22,7 @@ function fetchTopSongs(accessToken: string, offset: number): Promise<Response> {
 
 export async function getTopSongs(accessToken: string): Promise<Record<string, ISong>>{
   const responses = await Promise.all([fetchTopSongs(accessToken, 0), fetchTopSongs(accessToken, 49)]);
-  
+
   responses.forEach((res: Response) => {
     if (!res.ok) throw new HTTPResponseError(res);
   });
@@ -41,7 +41,7 @@ export async function getTopSongs(accessToken: string): Promise<Record<string, I
       acc[song.id] = {
         ...song,
         duration: song.duration_ms,
-        artists: artistInfo
+        artists: artistInfo,
       };
     });
 
