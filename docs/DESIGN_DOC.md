@@ -375,9 +375,12 @@ export class Lobby extends DbItem implements ILobby {
 
 ## Spotify Interactions
 
-The spotify
+Below I detailed some spotify interactions that we will most likely need.
 
 ### Access Token
+
+The most important thing we need is to obtain a user's access token. A user's access
+token can be retrieved through the 
 
 ### User Info
 
