@@ -1,4 +1,4 @@
-import { IArtist } from './song';
+import { IArtist } from '../song';
 
 export type TokenResponse = {
   'access_token': string,
@@ -39,7 +39,7 @@ export function isUserInfoResponse(res: any): res is UserInfoResponse {
 }
 
 export interface SongResponse{
-  id:string;
+  id: string;
   name: string;
   href: string;
   uri: string;
