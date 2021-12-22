@@ -12,7 +12,7 @@ function fetchTopSongs(accessToken: string, offset: number): Promise<Response> {
     offset,
   };
 
-  return fetch(TOP_TRACKS + objectToForm(query), {
+  return fetch(TOP_TRACKS + '?' + objectToForm(query), {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${accessToken}`,
