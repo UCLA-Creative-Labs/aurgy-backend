@@ -4,6 +4,7 @@ import { getAccessToken } from '../lib/spotify/access-token';
 import { getMeInfo } from '../lib/spotify/me';
 import { User } from '../lib/user';
 import { logger } from '../utils';
+import { genJwt, validateJwt } from '../utils/jwt';
 
 export const me_router = Router();
 
@@ -44,27 +45,27 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
   user.updateRefreshToken(tokens.refresh_token, false);
   void user.updateTopSongs();
 
+  const jwt = genJwt(user.id);
+
+  res.status(200).send({...user.getClientResponse(), jwt});
+});
+
+me_router.get('/', validateJwt, async (req: Request, res: Response): Promise<void> => {
+  const id: string = req.body.id;
+
+  const user = await User.fromId(id);
+  if (!user) return res.status(404).end();
+
+  void user.updateTopSongs();
   res.status(200).send(user.getClientResponse());
 });
 
-me_router.get('/', async (req: Request, res: Response): Promise<void> => {
-  const refreshToken: string = req.body.refreshToken;
+me_router.delete('/', validateJwt, async (req: Request, res: Response): Promise<void> => {
   const id: string = req.body.id;
 
-  const {status, user} = await User.verifyRequest(id, refreshToken);
-  if (status !== 200 || !user) {
-    return res.status(status).end();
-  }
+  const user = await User.fromId(id);
+  if (!user) return res.status(404).end();
 
-  void user.updateTopSongs();
-  res.status(status).send(user.getClientResponse());
-});
-
-me_router.delete('/', async (req: Request, res: Response): Promise<void> => {
-  const refreshToken: string = req.body.refreshToken;
-  const id: string = req.body.id;
-
-  const {status, user} = await User.verifyRequest(id, refreshToken);
-  if (status === 200 && user) void user.removeFromDatabase();
-  res.status(status).end();
+  void user.removeFromDatabase();
+  res.status(200).end();
 });
