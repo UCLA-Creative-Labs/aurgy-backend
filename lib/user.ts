@@ -66,7 +66,7 @@ export class User extends DbItem implements IUser {
     const document = await client.findDbItem(COLLECTION.USERS, id);
     if (!document) return null;
     const content: DatabaseEntry = document.getContent() as DatabaseEntry;
-    return new User(id, content, true);
+    return new User(id, content, document.key ?? null);
   }
 
   /**
@@ -127,8 +127,8 @@ export class User extends DbItem implements IUser {
 
   #refreshToken: string;
 
-  constructor(id: string, props: UserProps, existsInDb = false) {
-    super(id, COLLECTION.USERS, existsInDb);
+  constructor(id: string, props: UserProps, key: string | null = null) {
+    super(id, COLLECTION.USERS, key);
     this.#refreshToken = props.refreshToken;
     this.#topSongs = props.topSongs ?? [];
     this.name = props.name;
@@ -151,7 +151,7 @@ export class User extends DbItem implements IUser {
    * Updates a user's top songs
    */
   public async updateTopSongs(writeToDatabase = true): Promise<void> {
-    const accessToken = await getAccessToken(this.refreshToken);
+    const accessToken = await this.getAccessToken();
     const topSongs = await getTopSongs(accessToken);
     this.#topSongs = Object.keys(topSongs);
     if (writeToDatabase) void this.writeToDatabase();
@@ -165,6 +165,18 @@ export class User extends DbItem implements IUser {
   public updateRefreshToken(refreshToken: string, writeToDatabase = true): void {
     this.#refreshToken = refreshToken;
     if(writeToDatabase) void this.writeToDatabase();
+  }
+
+  /**
+   * Return a new access token to use. This function will also update 
+   * the user's refresh token.
+   *
+   * @returns a new access token for the user
+   */
+  public async getAccessToken(): Promise<string> {
+    const tokens = await getAccessToken(this.refreshToken);
+    this.updateRefreshToken(tokens['refresh_token']);
+    return tokens['access_token'];
   }
 
   /**

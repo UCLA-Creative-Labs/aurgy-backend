@@ -37,7 +37,7 @@ export abstract class DbItem implements IDbItem {
 
   #key: string | null;
 
-  constructor(id: string, collectionName: COLLECTION, _key = null) {
+  constructor(id: string, collectionName: COLLECTION, _key: string | null = null) {
     this.id = id;
     this.collectionName = collectionName;
     this.#key = _key;

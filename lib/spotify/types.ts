@@ -2,12 +2,13 @@ import { IArtist } from '../song';
 
 export type TokenResponse = {
   'access_token': string,
+  'refresh_token': string,
 };
 
 export type SpotifySubscriptionType = 'premium' | 'free';
 
 export function isTokenResponse(res: any): res is TokenResponse {
-  return 'access_token' in res;
+  return 'access_token' in res && 'refresh_token' in res;
 }
 
 export type Image = {
