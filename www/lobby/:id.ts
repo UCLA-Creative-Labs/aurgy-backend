@@ -1,62 +1,35 @@
 import { Router, Request, Response } from 'express';
-// import { getClient } from '../../lib';
 
-export const spooky_router = Router();
+export const lobby_id_router = Router();
 
 // Join a lobby
 /**
  * Body Params: id, lobbyToken, refreshToken
  */
-spooky_router.post('/:id', async (req: Request, res: Response) => {
-  const userId = req.body.userId;
-
-  const lobby = {
-    owner: 12345,
-    users: [],
-  };
-  const users = [...lobby.users];
-  users.concat(userId);
-
-  lobby.users = users;
-
-  // update lobby in database
-
-  res.status(200).json('spooky post');
+lobby_id_router.post('/:id', async (req: Request, res: Response) => {
+  res.status(200).json('placeholder post');
 });
 
 // Get lobby specific info
 /**
  * Body Params: id, refreshToken
  */
-spooky_router.get('/:id', async (req: Request, res: Response) => {
-  res.status(200).json('spooky get');
+lobby_id_router.get('/:id', async (req: Request, res: Response) => {
+  res.status(200).json('placeholder get');
 });
 
 // Update lobby information
 /**
  * Body Params: id, name, refreshToken
  */
-spooky_router.patch('/:id', async (req: Request, res: Response) => {
-  res.status(200).json('spooky get');
+lobby_id_router.patch('/:id', async (req: Request, res: Response) => {
+  res.status(200).json('placeholder patch');
 });
 
 // Delete a lobby
 /**
  * Body Params: id, refreshToken
  */
-spooky_router.delete('/:id', async (req: Request, res: Response) => {
-  const userId = req.body.userId;
-
-  const lobby = {
-    owner: 12345,
-    users: [],
-  };
-
-  // remove user from lobby
-  const users = [...lobby.users].filter(user => user !== userId);
-  lobby.users = users;
-
-  // update lobby in database
-
-  res.status(200).json('spooky delete');
+lobby_id_router.delete('/:id', async (req: Request, res: Response) => {
+  res.status(200).json('placeholder delete');
 });
