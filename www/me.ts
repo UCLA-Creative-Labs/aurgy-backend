@@ -13,7 +13,7 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
   const getUserInfo = async (): Promise<{userInfo: UserInfoResponse, tokens: TokenResponse} | null> => {
     try {
       const tokens = await getAccessToken(refreshToken);
-      const userInfo = await getMeInfo(tokens['access_token']);
+      const userInfo = await getMeInfo(tokens.access_token);
       return {tokens, userInfo};
     } catch (err) {
       logger.error(err);
@@ -41,8 +41,8 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
 
   // This performs a write to the database so regardless of whether or not
   // this is an update, we need to write to the database
-  user.updateRefreshToken(tokens['refresh_token'], false);
-  user.updateTopSongs();
+  user.updateRefreshToken(tokens.refresh_token, false);
+  void user.updateTopSongs();
 
   res.status(200).send(user.getClientResponse());
 });
@@ -56,7 +56,7 @@ me_router.get('/', async (req: Request, res: Response): Promise<void> => {
     return res.status(status).end();
   }
 
-  user.updateTopSongs();
+  void user.updateTopSongs();
   res.status(status).send(user.getClientResponse());
 });
 

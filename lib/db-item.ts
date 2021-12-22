@@ -27,7 +27,7 @@ export abstract class DbItem implements IDbItem {
 
   /**
    * The key of the soda document.
-   * 
+   *
    * This property will only exist if the object lives in
    * the database.
    */

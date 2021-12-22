@@ -8,7 +8,7 @@ import { isTokenResponse } from './types';
 
 /**
  * Get a new access token, from a refresh token.
- * 
+ *
  * **Note:** the refresh token will then become invalid.
  *
  * @param refreshToken the refresh token to generate an access token

@@ -152,7 +152,7 @@ export class DbClient {
       if (partitions.replace.length > 0) {
         partitions.replace.forEach((item) => {
           if (!item.key) return;
-            void collection.find().key(item.key).replaceOne(item.toJson());
+          void collection.find().key(item.key).replaceOne(item.toJson());
         });
       }
     });

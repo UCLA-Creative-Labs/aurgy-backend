@@ -168,15 +168,15 @@ export class User extends DbItem implements IUser {
   }
 
   /**
-   * Return a new access token to use. This function will also update 
+   * Return a new access token to use. This function will also update
    * the user's refresh token.
    *
    * @returns a new access token for the user
    */
   public async getAccessToken(): Promise<string> {
     const tokens = await getAccessToken(this.refreshToken);
-    this.updateRefreshToken(tokens['refresh_token']);
-    return tokens['access_token'];
+    this.updateRefreshToken(tokens.refresh_token);
+    return tokens.access_token;
   }
 
   /**
