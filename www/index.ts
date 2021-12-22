@@ -6,7 +6,6 @@ import {logger} from '../utils';
 
 // ROUTES
 import { lobby_router } from './lobby';
-import { POST_login } from './login';
 import { me_router } from './me';
 
 const PORT = process.env.PORT ?? 3000;
@@ -29,7 +28,6 @@ app.get('/', async (_req, res) => {
 });
 
 // LOGIN
-app.post('/login', POST_login);
 app.use('/lobby', lobby_router);
 app.use('/me', me_router);
 

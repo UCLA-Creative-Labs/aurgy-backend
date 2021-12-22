@@ -4,16 +4,10 @@ import { spooky_router } from './:id';
 
 export const lobby_router = Router();
 
-// Returns the lobbies a user is managing and participating in
-lobby_router.get('/', async (req: Request, res: Response) => {
-  const client = await getClient();
-  const lobbies = await client.openCollection('lobbies');
-
-  console.log(lobbies);
-  res.status(200).json('filter');
-});
-
 // Creates a new lobby and returns the lobby id w/ lobby data
+/**
+ * Body Params: lobbyName, theme, id, refreshToken
+ */
 lobby_router.post('/', async (req: Request, res: Response) => {
   const client = await getClient();
 
@@ -27,15 +21,21 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   };
 
   const userTable = await client.openCollection('lobbies');
-  if (false) {
+  if (userTable) {
     await userTable.insertOne(lobby);
   }
 
   res.status(200).json({ message: 'Filler.' });
 });
 
-// Deletes a lobby a user owns
-lobby_router.delete('/', async (req: Request, res: Response) => {
+// Returns the lobbies a user is managing and participating in
+/**
+ * Body Params: id, refreshToken
+ */
+lobby_router.get('/', async (req: Request, res: Response) => {
+  const client = await getClient();
+  const lobbies = await client.openCollection('lobbies');
+  await lobbies.find();
   res.status(200).json('filter');
 });
 
