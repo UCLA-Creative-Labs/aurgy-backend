@@ -8,12 +8,12 @@ type ClientResponse = Omit<DatabaseEntry, 'users' | 'uri'>;
 
 export interface LobbyProps {
   /**
-  * The spotify playlist id
+  * The spotify id of playlist
   */
   readonly spotifyPlaylistId?: string;
 
   /**
-   * The id of the lobby creator
+   * The manager of a lobby
    */
   readonly manager: User;
 
@@ -23,13 +23,13 @@ export interface LobbyProps {
   readonly participants: string[];
 
   /**
-  * The theme for the lobby
-  */
+   * The theme of a lobby
+   */
   readonly theme: string;
 
   /**
-  * The name of the lobby
-  */
+   * The playlist name
+   */
   readonly name: string;
 }
 
@@ -54,27 +54,27 @@ export class Lobby extends DbItem implements ILobby {
   }
 
   /**
-   * The id of the lobby creator
-   */
-  readonly manager: User;
-
-  /**
-   * The spotify playlist id
+   * The spotify id of playlist
    */
   readonly spotifyPlaylistId?: string;
 
   /**
-   * The theme for the lobby
+   * The manager of a lobby
+   */
+  readonly manager: User;
+
+  /**
+   * The theme of a lobby
    */
   readonly theme: string;
 
   /**
-  * The name of the lobby
-  */
+   * The playlist name
+   */
   readonly name: string;
 
   /**
-   * A lobby's users
+   * The participants in a lobby
    */
   get participants(): string[] {
     return this.#users;
@@ -128,7 +128,7 @@ export class Lobby extends DbItem implements ILobby {
   }
 
   /**
-   * Update lobby name
+   * Update the playlist based on the name and songs
    */
   public async updatePlaylist(): Promise<void> {
     void this.writeToDatabase();
