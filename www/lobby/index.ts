@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
+import { getClient } from '../../lib';
 import { Lobby } from '../../lib/lobby';
+import { COLLECTION } from '../../lib/private/enums';
 import { User } from '../../lib/user';
+import { generateLobbyId } from '../../utils/lobby';
 import { lobby_id_router } from './:id';
 
 export const lobby_router = Router();
-
-let retryNum = 0;
-// const HASH_16 = 1000000000100011;
 
 // verification middleware
 lobby_router.use('/midtest', async (req: Request, res: Response, next: any) => {
@@ -35,15 +35,25 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   const lobbyName = req.body.lobbyName;
   const theme = req.body.theme;
   const userId = req.body.id;
-
   const participants = [userId];
-  const lobbyId = generateLobbyId(userId).toString();
+
   const manager = await User.fromId(userId) ?? null;
   if (!manager) {
     res.status(404).json('user dne');
     return;
   }
-  const lobby = (await Lobby.fromId(lobbyId)) ?? new Lobby(lobbyId,  {
+
+  const client = await getClient();
+  let retryNum = 0;
+  let lobbyId = generateLobbyId(userId, retryNum).toString();
+  let exists = await client.findDbItem(COLLECTION.LOBBIES, lobbyId);
+  while (exists) {
+    lobbyId = generateLobbyId(userId, retryNum).toString();
+    exists = await client.findDbItem(COLLECTION.LOBBIES, lobbyId);
+    retryNum++;
+  }
+
+  const lobby = new Lobby(lobbyId, {
     theme: theme,
     name: lobbyName,
     manager: manager,
@@ -65,9 +75,3 @@ lobby_router.get('/', async (req: Request, res: Response) => {
 });
 
 lobby_router.use('/', lobby_id_router);
-
-const generateLobbyId = (userId : string) : string => {
-  const lobbyId : string = userId + Date.now() + retryNum;
-  retryNum++;
-  return lobbyId;
-};
