@@ -77,15 +77,15 @@ export class Lobby extends DbItem implements ILobby {
    * The participants in a lobby
    */
   get participants(): string[] {
-    return this.#users;
+    return this.#participants;
   }
 
-  #users: string[];
+  #participants: string[];
 
   constructor(id: string, props: LobbyProps, key: string | null = null) {
     super(id, COLLECTION.LOBBIES, key);
     this.manager = props.manager;
-    this.#users = props.participants ?? [];
+    this.#participants = props.participants ?? [];
     this.spotifyPlaylistId = props.spotifyPlaylistId;
     this.theme = props.theme;
     this.name = props.name;
@@ -97,27 +97,38 @@ export class Lobby extends DbItem implements ILobby {
    */
   public toJson(): DatabaseEntry {
     const {collectionName: _c, ...entry} = this;
-    return { ...entry, participants: this.#users };
+    return { ...entry, participants: this.#participants };
+  }
+
+  /**
+   * validate that a calling user is the manager of a lobby
+   */
+  public async validateManagerAccess(user : User) : Promise<boolean> {
+    const managerToken = await this.manager.getAccessToken();
+    const accessToken = await user.getAccessToken();
+    return managerToken === accessToken;
   }
 
   /**
    * Add a user to the lobby
    */
-  public async addUser(): Promise<void> {
-    // Validate user access token
-    // Get uid to add
-    // Update the users list portion of this
-    void this.writeToDatabase();
+  public async addUser(user : User, addUserId : string): Promise<void> {
+    const validate = await this.validateManagerAccess(user);
+    if (validate) {
+      this.#participants = [...this.#participants, addUserId];
+      void this.writeToDatabase();
+    }
   }
 
   /**
    * Removes a user from the lobby
    */
-  public async removeUser(): Promise<void> {
-    // Validate user access token
-    // Get uid to remove
-    // Update the users list portion of this
-    void this.writeToDatabase();
+  public async removeUser(user : User, removeUserId : string): Promise<void> {
+    const validate = await this.validateManagerAccess(user);
+    if (validate) {
+      this.#participants = this.#participants.filter(uid => uid !== removeUserId);
+      void this.writeToDatabase();
+    }
   }
 
   /**
