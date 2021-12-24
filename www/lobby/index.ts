@@ -5,6 +5,9 @@ import { lobby_id_router } from './:id';
 
 export const lobby_router = Router();
 
+let retryNum = 0;
+// const HASH_16 = 1000000000100011;
+
 // verification middleware
 lobby_router.use('/midtest', async (req: Request, res: Response, next: any) => {
   const userId = req.body.id;
@@ -32,22 +35,23 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   const lobbyName = req.body.lobbyName;
   const theme = req.body.theme;
   const userId = req.body.id;
-  const refreshToken = req.body.refreshToken;
 
-  const users = [userId];
-  const lobbyId = generateLobbyId(userId, refreshToken);
+  const participants = [userId];
+  const lobbyId = generateLobbyId(userId).toString();
+  const manager = await User.fromId(userId) ?? null;
+  if (!manager) {
+    res.status(404).json('user dne');
+    return;
+  }
   const lobby = (await Lobby.fromId(lobbyId)) ?? new Lobby(lobbyId,  {
-    theme,
+    theme: theme,
     name: lobbyName,
-    ownerId: userId,
-    users: users,
-    playlistId: undefined,
+    manager: manager,
+    participants: participants,
+    spotifyPlaylistId: undefined,
   });
 
-  if (!lobby.existsInDb) {
-    console.log(`created lobby ${lobbyName}: ${lobbyId}`);
-    void lobby.writeToDatabase();
-  }
+  void lobby.writeToDatabase();
 
   res.status(200).json({ name: lobbyName, id: lobbyId });
 });
@@ -62,6 +66,8 @@ lobby_router.get('/', async (req: Request, res: Response) => {
 
 lobby_router.use('/', lobby_id_router);
 
-const generateLobbyId = (userId : string, refreshToken : string) : string => {
-  return userId + refreshToken + Date.now();
+const generateLobbyId = (userId : string) : string => {
+  const lobbyId : string = userId + Date.now() + retryNum;
+  retryNum++;
+  return lobbyId;
 };
