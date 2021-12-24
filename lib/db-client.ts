@@ -140,7 +140,7 @@ export class DbClient {
       if (!(item.collectionName in acc)) {
         acc[item.collectionName] = { replace: [], insert: [] };
       }
-      const partition = item.existsInDb ? 'replace' : 'insert';
+      const partition = item.key ? 'replace' : 'insert';
       acc[item.collectionName][partition].push(item);
       return acc;
     }, {});
@@ -151,7 +151,8 @@ export class DbClient {
         void collection.insertMany(partitions.insert.map(item => item.toJson()));
       if (partitions.replace.length > 0) {
         partitions.replace.forEach((item) => {
-          void collection.find().filter({id: item.id}).replaceOne(item.toJson());
+          if (!item.key) return;
+          void collection.find().key(item.key).replaceOne(item.toJson());
         });
       }
     });

@@ -17,6 +17,7 @@
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
     "@types/jest": "^27.0.3",
+    "@types/jsonwebtoken": "^8.5.6",
     "@types/node": "^14.14.35",
     "@types/node-fetch": "2.5.12",
     "@types/oracledb": "^5.2.1",
@@ -33,6 +34,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
     "node-fetch": "2.6.6",
     "oracledb": "https://github.com/oracle/node-oracledb/releases/download/v5.3.0/oracledb-src-5.3.0.tgz",
     "winston": "^3.3.3"
