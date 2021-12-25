@@ -1,5 +1,5 @@
 import fetch, {Response} from 'node-fetch';
-import { objectToForm } from '../../utils';
+import { logger, objectToForm } from '../../utils';
 import { HTTPResponseError } from '../../utils/errors';
 import { TOP_TRACKS } from '../private/SPOTIFY_ENDPOINTS';
 import { IArtist, Song } from '../song';
@@ -33,8 +33,10 @@ export async function getTopSongs(accessToken: string): Promise<Record<string, S
   // a list of song id's to grab audio features later
   const reevaluate: string[] = [];
 
-  const songMap = data.reduce((acc: Record<string, Song>, {items}: TopSongResponse) => {
-    items.forEach(async (song: SongResponse) => {
+  const songMap = await data.reduce(async (accP: Record<string, Song>, {items}: TopSongResponse) => {
+    const acc = await accP;
+  
+    await Promise.all(items.map(async (song: SongResponse) => {
       if (song.id in acc) return;
 
       // If the song exists in the database, we dont need to get the rest of the data
@@ -58,13 +60,14 @@ export async function getTopSongs(accessToken: string): Promise<Record<string, S
       });
 
       reevaluate.push(song.id);
-    });
+    }));
 
     return acc;
-  }, {});
+  }, Promise.resolve({}));
 
   // reevaluate songs to update with audio features;
   if (reevaluate.length > 0) {
+    logger.info(`Grabbing audio features for ${reevaluate.length} songs.`);
     const audioFeaturesMap = await getAudioFeatures(accessToken, ...reevaluate);
     Object.entries(audioFeaturesMap).forEach(([id, audioFeatures]) => {
       const song = songMap[id];

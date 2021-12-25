@@ -52,7 +52,7 @@ export class Song extends DbItem implements ISong {
    */
   public static async fromId(id: string): Promise<Song | null> {
     const client = await getClient();
-    const document = await client.findDbItem(COLLECTION.USERS, id);
+    const document = await client.findDbItem(COLLECTION.SONGS, id);
     if (!document) return null;
     const content: DatabaseEntry = document.getContent() as DatabaseEntry;
     return new Song(id, content, document.key ?? null);
