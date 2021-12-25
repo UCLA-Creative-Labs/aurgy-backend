@@ -1,4 +1,5 @@
 import { IArtist } from '../song';
+import { AudioFeatures } from './audio-features';
 
 export type TokenResponse = {
   'access_token': string,
@@ -51,4 +52,16 @@ export interface SongResponse{
 
 export interface TopSongResponse{
   items: SongResponse[];
+}
+
+interface AudioFeatureResponse extends AudioFeatures {
+  id: string;
+}
+
+export interface AudioFeaturesResponse {
+  audio_features: AudioFeatureResponse[];
+}
+
+export function isAudioFeaturesResponse(res: any): res is AudioFeaturesResponse {
+  return 'audio_features' in res;
 }
