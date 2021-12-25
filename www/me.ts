@@ -43,6 +43,8 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
   // This performs a write to the database so regardless of whether or not
   // this is an update, we need to write to the database
   user.updateRefreshToken(tokens.refresh_token, false);
+
+  // we should probably remove this at some point or check if its a first time user at least!
   void user.updateTopSongs();
 
   const jwt = genJwt(user.id);
@@ -56,6 +58,7 @@ me_router.get('/', validateJwt, async (req: Request, res: Response): Promise<voi
   const user = await User.fromId(id);
   if (!user) return res.status(404).end();
 
+  // we should probably remove this at some point
   void user.updateTopSongs();
   res.status(200).send(user.getClientResponse());
 });
