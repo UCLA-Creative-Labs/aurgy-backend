@@ -6,7 +6,7 @@ import { isAudioFeaturesResponse } from './types';
 
 /**
  * A song's audio features.
- * 
+ *
  * Taken directly from the Spotify API website for reference.
  * https://developer.spotify.com/documentation/web-api/reference/#/operations/get-several-audio-features
  */

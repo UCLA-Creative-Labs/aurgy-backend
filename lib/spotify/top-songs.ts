@@ -35,7 +35,7 @@ export async function getTopSongs(accessToken: string): Promise<Record<string, S
 
   const songMap = await data.reduce(async (accP: Record<string, Song>, {items}: TopSongResponse) => {
     const acc = await accP;
-  
+
     await Promise.all(items.map(async (song: SongResponse) => {
       if (song.id in acc) return;
 
