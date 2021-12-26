@@ -3,8 +3,8 @@ import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
 import { getTopSongs } from './spotify/top-songs';
 
-type DatabaseEntry = Omit<IUser, 'collectionName' | 'existsInDb'>;
-type ClientResponse = Omit<DatabaseEntry, 'topSongs' | 'refreshToken' | 'uri'>;
+type DatabaseEntry = Omit<IUser, 'collectionName'>;
+type ClientResponse = Omit<DatabaseEntry, 'uri'>;
 
 export interface UserProps {
   /**
@@ -50,8 +50,6 @@ export interface IUser extends Omit<UserProps, 'topSongs'>, IDbItem {
   readonly topSongs: string[];
 }
 
-export type VerifiedUser = { status: 403 | 404, user?: User } | { status: 200, user: User };
-
 /**
  * The class containing a user and their data
  */
@@ -67,21 +65,6 @@ export class User extends DbItem implements IUser {
     if (!document) return null;
     const content: DatabaseEntry = document.getContent() as DatabaseEntry;
     return new User(id, content, document.key ?? null);
-  }
-
-  /**
-   * Verify the user exists in the database and that the refresh token match
-   *
-   * @param id the user id
-   * @param refreshToken the refresh token
-   *
-   * @returns the status to return and user if its verified
-   */
-  public static async verifyRequest(id: string, refreshToken: string): Promise<VerifiedUser> {
-    const user = await User.fromId(id);
-    if (!user) return { status: 404 };
-    if (user.refreshToken !== refreshToken) return { status: 403 };
-    return { status: 200, user };
   }
 
   /**
