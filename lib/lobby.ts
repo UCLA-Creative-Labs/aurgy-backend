@@ -15,7 +15,7 @@ export interface LobbyProps {
   /**
    * The manager of a lobby
    */
-  readonly manager: User;
+  readonly managerId: string;
 
   /**
    * The participants in a lobby
@@ -31,9 +31,14 @@ export interface LobbyProps {
    * The playlist name
    */
   readonly name: string;
+
+  /**
+   * The list of song ids in the playlist
+   */
+  readonly songIds: string[];
 }
 
-export interface ILobby extends Omit<LobbyProps, 'topSongs'>, IDbItem {
+export interface ILobby extends LobbyProps, IDbItem {
 }
 
 /**
@@ -59,9 +64,9 @@ export class Lobby extends DbItem implements ILobby {
   readonly spotifyPlaylistId?: string;
 
   /**
-   * The manager of a lobby
+   * The manager user id of a lobby
    */
-  readonly manager: User;
+  readonly managerId: string;
 
   /**
    * The theme of a lobby
@@ -82,9 +87,18 @@ export class Lobby extends DbItem implements ILobby {
 
   #participants: string[];
 
+  /**
+   * The list of song ids in the playlist
+   */
+  get songIds(): string[] {
+    return this.#songIds;
+  }
+
+  #songIds: string[];
+
   constructor(id: string, props: LobbyProps, key: string | null = null) {
     super(id, COLLECTION.LOBBIES, key);
-    this.manager = props.manager;
+    this.managerId = props.managerId;
     this.#participants = props.participants ?? [];
     this.spotifyPlaylistId = props.spotifyPlaylistId;
     this.theme = props.theme;
@@ -104,7 +118,8 @@ export class Lobby extends DbItem implements ILobby {
    * validate that a calling user is the manager of a lobby
    */
   public async validateManagerAccess(user : User) : Promise<boolean> {
-    const managerToken = await this.manager.getAccessToken();
+    const manager = await User.fromId(this.managerId);
+    const managerToken = await manager?.getAccessToken();
     const accessToken = await user.getAccessToken();
     return managerToken === accessToken;
   }

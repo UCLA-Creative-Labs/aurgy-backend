@@ -1,31 +1,13 @@
 import { Router, Request, Response } from 'express';
-import { getClient } from '../../lib';
 import { Lobby } from '../../lib/lobby';
-import { COLLECTION } from '../../lib/private/enums';
 import { User } from '../../lib/user';
+import { validateJwt } from '../../utils/jwt';
 import { generateLobbyId } from '../../utils/lobby';
 import { lobby_id_router } from './:id';
 
 export const lobby_router = Router();
 
-// verification middleware
-lobby_router.use('/midtest', async (req: Request, res: Response, next: any) => {
-  const userId = req.body.id;
-  const refreshToken = req.body.refreshToken;
-
-  const user = (await User.fromId(userId) ?? null);
-  if (!user) {
-    res.status(404).json('user DNE');
-    return;
-  }
-
-  const verify = await User.verifyRequest(userId, refreshToken);
-  if (verify.status !== 200) {
-    res.status(403).json('verify fail');
-    return;
-  }
-  next();
-});
+lobby_router.use('/midtest', validateJwt);
 
 // Creates a new lobby and returns the lobby id w/ lobby data
 /**
@@ -36,6 +18,7 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   const theme = req.body.theme;
   const userId = req.body.id;
   const participants = [userId];
+  const songIds : string[] = [];
 
   const manager = await User.fromId(userId) ?? null;
   if (!manager) {
@@ -43,22 +26,22 @@ lobby_router.post('/', async (req: Request, res: Response) => {
     return;
   }
 
-  const client = await getClient();
   let retryNum = 0;
-  let lobbyId = generateLobbyId(userId, retryNum).toString();
-  let exists = await client.findDbItem(COLLECTION.LOBBIES, lobbyId);
+  let lobbyId = generateLobbyId(userId, retryNum);
+  let exists = await Lobby.fromId(lobbyId);
   while (exists) {
-    lobbyId = generateLobbyId(userId, retryNum).toString();
-    exists = await client.findDbItem(COLLECTION.LOBBIES, lobbyId);
     retryNum++;
+    lobbyId = generateLobbyId(userId, retryNum);
+    exists = await Lobby.fromId(lobbyId);
   }
 
   const lobby = new Lobby(lobbyId, {
     theme: theme,
     name: lobbyName,
-    manager: manager,
+    managerId: userId,
     participants: participants,
     spotifyPlaylistId: undefined,
+    songIds: songIds,
   });
 
   void lobby.writeToDatabase();
