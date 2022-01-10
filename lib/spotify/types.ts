@@ -1,13 +1,15 @@
-import { IArtist } from './song';
+import { IArtist } from '../song';
+import { AudioFeatures } from './audio-features';
 
 export type TokenResponse = {
   'access_token': string,
+  'refresh_token': string,
 };
 
 export type SpotifySubscriptionType = 'premium' | 'free';
 
 export function isTokenResponse(res: any): res is TokenResponse {
-  return 'access_token' in res;
+  return 'access_token' in res && 'refresh_token' in res;
 }
 
 export type Image = {
@@ -39,7 +41,7 @@ export function isUserInfoResponse(res: any): res is UserInfoResponse {
 }
 
 export interface SongResponse{
-  id:string;
+  id: string;
   name: string;
   href: string;
   uri: string;
@@ -50,4 +52,16 @@ export interface SongResponse{
 
 export interface TopSongResponse{
   items: SongResponse[];
+}
+
+interface AudioFeatureResponse extends AudioFeatures {
+  id: string;
+}
+
+export interface AudioFeaturesResponse {
+  audio_features: AudioFeatureResponse[];
+}
+
+export function isAudioFeaturesResponse(res: any): res is AudioFeaturesResponse {
+  return 'audio_features' in res;
 }

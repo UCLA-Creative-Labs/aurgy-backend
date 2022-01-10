@@ -8,7 +8,7 @@ import { COLLECTION } from './private/enums';
 export interface IDbItem {
   readonly id: string;
   readonly collectionName: string;
-  readonly existsInDb: boolean;
+  readonly key: string | null;
 }
 
 /**
@@ -26,20 +26,21 @@ export abstract class DbItem implements IDbItem {
   public readonly collectionName: COLLECTION;
 
   /**
-   * Check if the object exists within the database already
+   * The key of the soda document.
    *
-   * Useful for determining whether or not to insert or replace an item.
+   * This property will only exist if the object lives in
+   * the database.
    */
-  get existsInDb(): boolean {
-    return this.#existsInDb;
+  get key (): string | null {
+    return this.#key;
   }
 
-  #existsInDb: boolean;
+  #key: string | null;
 
-  constructor(id: string, collectionName: COLLECTION, _existsInDb = false) {
+  constructor(id: string, collectionName: COLLECTION, _key: string | null = null) {
     this.id = id;
     this.collectionName = collectionName;
-    this.#existsInDb = _existsInDb;
+    this.#key = _key;
   }
 
   /**

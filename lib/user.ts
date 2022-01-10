@@ -1,9 +1,10 @@
-import { getClient, SpotifySubscriptionType } from '.';
+import { getAccessToken, getClient, SpotifySubscriptionType } from '.';
 import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
+import { getTopSongs } from './spotify/top-songs';
 
-type DatabaseEntry = Omit<IUser, 'collectionName' | 'existsInDb'>;
-type ClientResponse = Omit<DatabaseEntry, 'topSongs' | 'refreshToken' | 'uri'>;
+type DatabaseEntry = Omit<IUser, 'collectionName'>;
+type ClientResponse = Omit<DatabaseEntry, 'uri'>;
 
 export interface UserProps {
   /**
@@ -49,8 +50,6 @@ export interface IUser extends Omit<UserProps, 'topSongs'>, IDbItem {
   readonly topSongs: string[];
 }
 
-export type VerifiedUser = { status: 403 | 404, user?: User } | { status: 200, user: User };
-
 /**
  * The class containing a user and their data
  */
@@ -65,22 +64,7 @@ export class User extends DbItem implements IUser {
     const document = await client.findDbItem(COLLECTION.USERS, id);
     if (!document) return null;
     const content: DatabaseEntry = document.getContent() as DatabaseEntry;
-    return new User(id, content, true);
-  }
-
-  /**
-   * Verify the user exists in the database and that the refresh token match
-   *
-   * @param id the user id
-   * @param refreshToken the refresh token
-   *
-   * @returns the status to return and user if its verified
-   */
-  public static async verifyRequest(id: string, refreshToken: string): Promise<VerifiedUser> {
-    const user = await User.fromId(id);
-    if (!user) return { status: 404 };
-    else if (user.refreshToken !== refreshToken) return { status: 403 };
-    else return { status: 200, user };
+    return new User(id, content, document.key ?? null);
   }
 
   /**
@@ -126,8 +110,8 @@ export class User extends DbItem implements IUser {
 
   #refreshToken: string;
 
-  constructor(id: string, props: UserProps, existsInDb = false) {
-    super(id, COLLECTION.USERS, existsInDb);
+  constructor(id: string, props: UserProps, key: string | null = null) {
+    super(id, COLLECTION.USERS, key);
     this.#refreshToken = props.refreshToken;
     this.#topSongs = props.topSongs ?? [];
     this.name = props.name;
@@ -149,11 +133,33 @@ export class User extends DbItem implements IUser {
   /**
    * Updates a user's top songs
    */
-  public updateTopSongs(): void {
-    // Get user access token
-    // Get top songs from user
-    // Update the top songs portion of this
-    void this.writeToDatabase();
+  public async updateTopSongs(writeToDatabase = true): Promise<void> {
+    const accessToken = await this.getAccessToken();
+    const topSongs = await getTopSongs(accessToken);
+    this.#topSongs = Object.keys(topSongs);
+    if (writeToDatabase) void this.writeToDatabase();
+  }
+
+  /**
+   * Update the refresh token in the database
+   *
+   * @param refreshToken the refresh token to update
+   */
+  public updateRefreshToken(refreshToken: string, writeToDatabase = true): void {
+    this.#refreshToken = refreshToken;
+    if(writeToDatabase) void this.writeToDatabase();
+  }
+
+  /**
+   * Return a new access token to use. This function will also update
+   * the user's refresh token.
+   *
+   * @returns a new access token for the user
+   */
+  public async getAccessToken(): Promise<string> {
+    const tokens = await getAccessToken(this.refreshToken);
+    this.updateRefreshToken(tokens.refresh_token);
+    return tokens.access_token;
   }
 
   /**
