@@ -770,10 +770,50 @@ Verification happens in two stages:
 | 404         | User is not found in database                       |
 | 406         | User is not a manager of the lobby                  |
 
-
 ## Playlist Generation
+
+Playlist generation is a core part of how Aurgy will function. Thankfully, this component is
+internal to the backend and can be adjusted without much affect on the user interface or
+general user interactions.
 
 ### Themes and Audio Features
 
+To start off, we will have 1 theme. This theme will consist of something distinct enough so that
+interpretation is not that broad. For example, `road trip` can mean chill, acoustic music to some
+people or upbeat, pop to others. In which case, we should lean towards one over the other with
+something like: `disassociating on the highway`. 
 
+Once a theme is picked, we then need to define the audio features that comprise the theme. This work
+becomes a lot more trial and error but the general model should be the following:
+  * **min**: the minimum value a song's audio feature must have to qualify
+  * **max**: the maximum value a song's audio feature must have to qualify
+  * **target**: the target value for the theme
+  * **weight**: the weight attached to a given audio feature for a theme
+
+We can then start off with general points and potentially have people on board help us test combinations 
+and rate how close a playlist relates to the theme.
+
+### Simple Algorithm
+
+The general algorithm consists of the following steps:
+
+* Every lobby has a theme, this theme will have a set of audio features
+(dancebility, valence, etc.). These audio features will have a min, max, target and weights
+* For every user in a lobby, map through all their songs and first check if the song
+qualifies. If the song qualifies, calculate the closeness score.
+
+> <img src="https://latex.codecogs.com/svg.image?closeness&space;=&space;(1&space;-&space;(target_{feature}&space;-&space;song_{feature})&space;*&space;weight" title="closeness = (1 - (target_{feature} - song_{feature}) * weight"/>
+
+* Store the songs into a map, mapping the song id to the closeness score and number of users
+* Assign a higher priority to songs with multiple users contributing
+* Select the top 50 songs from all qualifying songs
+
+### Recommendation API
+
+In order to fill empty space in a playlist, we can utilize the recommendation
+API to get additional songs. We would need to seed the query with our current
+songs and target audio features but this method allows us to give the user new
+songs. 
+
+* [Recommendation](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-recommendations)
 
