@@ -21,6 +21,7 @@ of the API and combat them in an ad hoc fashion.
   * [Creating Playlists](#Creating-Playlists)
   * [Mutating Playlists](#Mutating-Playlists)
   * [Deleting Playlists](#Deleting-Playlists)
+  * [Following Playlists](#Following-Playlists)
 * [Express Endpoints](#Express-Endpoints)
   * [POST /me](#POST-me)
   * [GET /me](#GET-me)
@@ -384,17 +385,77 @@ token can be retrieved through their refresh token. Follow the directions in thi
 [article](https://developer.spotify.com/documentation/general/guides/authorization/code-flow/)
 to understand how the authorization flow works and how to refresh an auth token.
 
+However, once an access token is created through a refresh token, the used refresh token is
+then invalid. Thankfully, the response for creating an access token will always return a new
+refresh token. Thus, that new refresh token must be saved into the user's table. 
+
 ### User Info
 
+We will need basic information of a user to understand their Spotify Account type (premium/free) and their name.
+This data will primarily be used for display and we probably wont perform any processing on their information.
 
+* [User Info](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile)
+
+See the written code [here](../lib/spotify/me.ts#L6)
 
 ### User's Top Songs
 
+In order to get a user's top songs, we will utilize the following API:
+
+* [Top songs](https://developer.spotify.com/documentation/web-api/reference/#/operations/get-users-top-artists-and-tracks)
+
+Note, this API allows us to extract 50 items at a time. In order to combat this, we can first call for the first
+50 items. Then set the offset to 49, and extract the next 49 items (the last item in the previous query will overlap).
+This leads to 99 items as data points for a given user.
+
+See the written code [here](../lib/spotify/top-songs.ts#L24).
+
 ### Creating Playlists
 
-### Populating Playlists
+Whenever we create a new lobby, we will have to also create a spotify playlist. This requires us to interact
+with the Spotify API to create this playlist. This playlist should be created under the Creative Labs Spotify
+account and then all users in the lobby should follow the playlist.
 
-### Changing Playlists
+* [Create](https://developer.spotify.com/documentation/web-api/reference/#/operations/create-playlist)
+
+### Mutating Playlists
+
+Populating a playlist requires figuring out the songs that belong in the playlist. See
+[playlist generation](#playlist-generation) to understand how we generate these playlists.
+
+To update the tracks in a playlist. The simplest model would be to completely delete the playlist's tracks. And 
+simply add the new track ids to the playlist. This would require two API calls:
+
+* [Delete](https://developer.spotify.com/documentation/web-api/reference/#/operations/remove-tracks-playlist)
+* [Add](https://developer.spotify.com/documentation/web-api/reference/#/operations/add-tracks-to-playlist)
+
+If we want to change the metadata of a playlist, we can do so with the following update call:
+
+* [Details](https://developer.spotify.com/documentation/web-api/reference/#/operations/change-playlist-details)
+
+### Deleting Playlists
+
+Spotify does not have an endpoint to delete a playlist. To learn more about their decision read this
+[doc](https://developer.spotify.com/documentation/general/guides/working-with-playlists/#:~:text=We%20have%20no%20endpoint%20for,you%20are%20simply%20unfollowing%20it.)
+
+Instead, we will use the unfollow method to delete a given playlist from a user's library. 
+
+* [Unfollow](https://developer.spotify.com/documentation/web-api/reference/#/operations/unfollow-playlist)
+
+### Follow Playlist
+
+Whenever a user joins/creates a lobby, they should be "subscribed" to that playlist. Since playlists are 
+managed under the Creative Labs spotify account, we will use the Spotify API to make users follow the playlist.
+[Documentation](https://developer.spotify.com/documentation/web-api/reference/#/operations/follow-playlist)
+to follow a playlist.
+
+Make sure to set the body parameter for `public` to false.
+
+```json
+{
+  "public": false 
+}
+```
 
 ## Express Endpoints
 
@@ -416,13 +477,23 @@ and server is small. Below structures how the endpoints work:
 | DELETE | `/lobby/:id`          | Delete a lobby                                                      |
 | DELETE | `/lobby/:id/user/:id` | Delete a user from a lobby                                          |
 
-**Note**
+**Content Types**
 
 All content types will be in the `application/json` form:
 
 | Header Parameter | Description                        |
 | ---------------- | ---------------------------------- |
 | Content-Type     | Always set to `application/json`   |
+
+**Authentication**
+
+Authentication occurs with a JSON Web Token (JWT). JWT let's us cryptographically store the user's
+id through a hash. This allows us to verify the identity of a user securely, and immediately access 
+their information. See the function [`validateJwt`](../utils/jwt.ts#L12-L27) for more details.
+
+| Header Parameter | Description                             |
+| ---------------- | --------------------------------------- |
+| Authorization    | The token for a user: `Bearer TOKEN`    |
 
 ---
 
@@ -464,17 +535,17 @@ The response sent to the user if the authentication is successful.
 The GET request is a method for the client to verify a user's information through the cookies stored
 on the client.
 
-| Request Body Parameter | Description                        |
-| ---------------------- | ---------------------------------- |
-| id                     | The user's spotify id              |
-| refreshToken           | A user's refresh token             |
+| Headers         | Description                             |
+| --------------- | --------------------------------------- |
+| Authorization   | The token for a user: `Bearer TOKEN`    |
 
 **Responses**
 
 | Status Code | Description                                   |
 | ----------- | --------------------------------------------- |
 | 200         | A user response (detailed below)              |
-| 403         | Refresh token doesn't match database entry    |
+| 401         | Token is not present in headers               |
+| 403         | Token does not pass verification (expired)    |
 | 404         | User is not found in database                 |
 
 **User Response**
@@ -498,17 +569,17 @@ The response sent to the user if the authentication is successful.
 The DELETE request is a method for the client to delete their account. This will result in the entire
 entry for the user to be deleted.
 
-| Request Body Parameter | Description                        |
-| ---------------------- | ---------------------------------- |
-| id                     | The user's spotify id              |
-| refreshToken           | A user's refresh token             |
+| Headers         | Description                             |
+| --------------- | --------------------------------------- |
+| Authorization   | The token for a user: `Bearer TOKEN`    |
 
 **Responses**
 
 | Status Code | Description                                       |
 | ----------- | ------------------------------------------------- |
 | 200         | User has been succesfully deleted from database   |
-| 403         | Refresh token doesn't match database entry        |
+| 401         | Token is not present in headers               |
+| 403         | Token does not pass verification (expired)    |
 | 404         | User is not found in database                     |
 
 ---
@@ -519,19 +590,22 @@ The POST request for `/lobby` serves as a way to create a lobby. Aurgy will then
 return the lobby information. In order to understand who is making the request,
 we will be sending both the id and the refresh token of the user.
 
+| Headers         | Description                             |
+| --------------- | --------------------------------------- |
+| Authorization   | The token for a user: `Bearer TOKEN`    |
+
 | Request Body Parameter | Description                        |
 | ---------------------- | ---------------------------------- |
 | lobbyName              | The name of the lobby              |
 | theme                  | The theme of the lobby             |
-| id                     | The user's spotify id              |
-| refreshToken           | A user's refresh token             |
 
 **Responses**
 
 | Status Code | Description                                                                         |
 | ----------- | ----------------------------------------------------------------------------------- |
 | 200         | User has been succesfully deleted from database                                     |
-| 403         | User is authentication through refresh token is invalid                             |
+| 401         | Token is not present in headers                                                     |
+| 403         | Token does not pass verification (expired)                                          |
 | 404         | User is not found in database                                                       |
 | 406         | User has exceeded their lobby count, the name is invalid, or the theme is invalid   | 
 
@@ -552,17 +626,17 @@ The response sent to the user regarding the lobby information.
 
 The GET request for `/lobby` is a way for the user to get what lobbies they are in.
 
-| Request Body Parameter | Description                        |
-| ---------------------- | ---------------------------------- |
-| id                     | The user's spotify id              |
-| refreshToken           | A user's refresh token             |
+| Headers         | Description                             |
+| --------------- | --------------------------------------- |
+| Authorization   | The token for a user: `Bearer TOKEN`    |
 
 **Responses**
 
 | Status Code | Description                                                    |
 | ----------- | -------------------------------------------------------------- |
 | 200         | User has been authenticated and returns the lobbies response   |
-| 403         | User is authentication through refresh token is invalid        |
+| 401         | Token is not present in headers                                |
+| 403         | Token does not pass verification (expired)                     |
 | 404         | User is not found in database                                  |
 
 ---
@@ -575,42 +649,47 @@ Verification happens in two stages:
 1. User verification: make sure the user is valid
 2. Lobby token verification: Make sure the lobby token to join the lobby is valid (not expired)
 
+| Headers         | Description                             |
+| --------------- | --------------------------------------- |
+| Authorization   | The token for a user: `Bearer TOKEN`    |
+
 | Request Body Parameter | Description                            |
 | ---------------------- | -------------------------------------- |
-| id                     | The user's spotify id                  |
 | lobbyToken             | The expirable token to verify a lobby  |
-| refreshToken           | A user's refresh token                 |
 
 **Responses**
 
 | Status Code | Description                                                    |
 | ----------- | -------------------------------------------------------------- |
 | 200         | User has been added to the lobby and the lobby info is sent    |
-| 401         | The lobby token is invalid                                     |
-| 403         | User is authentication through refresh token is invalid        |
+| 401         | Token is not present in headers                                |
+| 403         | Token does not pass verification (expired)                     |
 | 404         | User is not found in database                                  |
+| 406         | The lobby token is invalid                                     |
 
 ---
 
 ### GET /lobby/:id
 
-The GET request for `/lobby/:id` is a way for a user to get lobby info.
+The GET request for `/lobby/:id` is a way for a user to get lobby info. It might be a good idea
+to turn this into a websocket. That way updates to the lobby when a user is on the page is updated
+on the client in real time. We can investigate this solution at a later day.
 
 Verification happens in two stages:
 1. User verification: make sure the user is valid
 2. Lobby Status: Make sure the user is part of the lobby
 
-| Request Body Parameter | Description                            |
-| ---------------------- | -------------------------------------- |
-| id                     | The user's spotify id                  |
-| refreshToken           | A user's refresh token                 |
+| Headers         | Description                             |
+| --------------- | --------------------------------------- |
+| Authorization   | The token for a user: `Bearer TOKEN`    |
 
 **Responses**
 
 | Status Code | Description                                                    |
 | ----------- | -------------------------------------------------------------- |
 | 200         | User is in lobby and the lobby data is sent to the user        |
-| 403         | User is authentication through refresh token is invalid        |
+| 401         | Token is not present in headers                                |
+| 403         | Token does not pass verification (expired)                     |
 | 404         | User is not found in database                                  |
 | 406         | User is not part of the lobby                                  |
 
@@ -624,18 +703,21 @@ Verification happens in two stages:
 1. User verification: make sure the user is valid
 2. Lobby Permissions: Make sure the user is the manager of the lobby
 
+| Headers         | Description                             |
+| --------------- | --------------------------------------- |
+| Authorization   | The token for a user: `Bearer TOKEN`    |
+
 | Request Body Parameter | Description                            |
 | ---------------------- | -------------------------------------- |
-| id                     | The user's spotify id                  |
 | name                   | The lobby name you want                |
-| refreshToken           | A user's refresh token                 |
 
 **Responses**
 
 | Status Code | Description                                         |
 | ----------- | --------------------------------------------------- |
 | 200         | Lobby has been succesfully updated from database    |
-| 403         | Refresh token doesn't match database entry          |
+| 401         | Token is not present in headers                     |
+| 403         | Token does not pass verification (expired)          |
 | 404         | User is not found in database                       |
 | 406         | User is not a manager of the lobby                  |
 
@@ -649,17 +731,17 @@ Verification happens in two stages:
 1. User verification: make sure the user is valid
 2. Lobby Permissions: Make sure the user is the manager of the lobby
 
-| Request Body Parameter | Description                            |
-| ---------------------- | -------------------------------------- |
-| id                     | The user's spotify id                  |
-| refreshToken           | A user's refresh token                 |
+| Headers         | Description                             |
+| --------------- | --------------------------------------- |
+| Authorization   | The token for a user: `Bearer TOKEN`    |
 
 **Responses**
 
 | Status Code | Description                                         |
 | ----------- | --------------------------------------------------- |
 | 200         | Lobby has been succesfully deleted from database    |
-| 403         | Refresh token doesn't match database entry          |
+| 401         | Token is not present in headers                     |
+| 403         | Token does not pass verification (expired)          |
 | 404         | User is not found in database                       |
 | 406         | User is not a manager of the lobby                  |
 
@@ -674,17 +756,17 @@ Verification happens in two stages:
 1. User verification: make sure the user is valid
 2. Lobby Permissions: Make sure the user is the manager of the lobby
 
-| Request Body Parameter | Description                            |
-| ---------------------- | -------------------------------------- |
-| id                     | The user's spotify id                  |
-| refreshToken           | A user's refresh token                 |
+| Headers         | Description                             |
+| --------------- | --------------------------------------- |
+| Authorization   | The token for a user: `Bearer TOKEN`    |
 
 **Responses**
 
 | Status Code | Description                                         |
 | ----------- | --------------------------------------------------- |
 | 200         | Lobby has been succesfully deleted from database    |
-| 403         | Refresh token doesn't match database entry          |
+| 401         | Token is not present in headers                     |
+| 403         | Token does not pass verification (expired)          |
 | 404         | User is not found in database                       |
 | 406         | User is not a manager of the lobby                  |
 
