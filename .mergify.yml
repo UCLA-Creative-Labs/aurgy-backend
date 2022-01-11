@@ -80,10 +80,6 @@ pull_request_rules:
       comment:
         message: Thanks Dependabot 🙏!
       merge:
-        # 'strict: false' disables Mergify keeping the branch up-to-date from main.
-        # It's not necessary: Dependabot will do that itself.
-        # It's not dangerous: GitHub branch protection settings prevent merging stale branches.
-        strict: false
         method: squash
       delete_head_branch: {}
     conditions:
