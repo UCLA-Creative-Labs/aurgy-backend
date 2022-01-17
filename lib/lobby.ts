@@ -3,7 +3,7 @@ import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
 import { User } from './user';
 
-type DatabaseEntry = Omit<ILobby, 'collectionName' | 'existsInDb'>;
+type DatabaseEntry = Omit<ILobby, 'collectionName'>;
 type ClientResponse = Omit<DatabaseEntry, 'users' | 'uri'>;
 
 export interface LobbyProps {

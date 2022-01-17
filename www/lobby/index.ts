@@ -27,15 +27,15 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   }
 
   let retryNum = 0;
-  let lobbyId = generateLobbyId(userId, retryNum);
-  let exists = await Lobby.fromId(lobbyId);
+  let newLobbyId = generateLobbyId(userId, retryNum);
+  let exists = await Lobby.fromId(newLobbyId);
   while (exists) {
     retryNum++;
-    lobbyId = generateLobbyId(userId, retryNum);
-    exists = await Lobby.fromId(lobbyId);
+    newLobbyId = generateLobbyId(userId, retryNum);
+    exists = await Lobby.fromId(newLobbyId);
   }
 
-  const lobby = new Lobby(lobbyId, {
+  const lobby = new Lobby(newLobbyId, {
     theme: theme,
     name: lobbyName,
     managerId: userId,
@@ -46,7 +46,7 @@ lobby_router.post('/', async (req: Request, res: Response) => {
 
   void lobby.writeToDatabase();
 
-  res.status(200).json({ name: lobbyName, id: lobbyId });
+  res.status(200).json({ name: lobbyName, id: newLobbyId });
 });
 
 // Returns the lobbies a user is managing and participating in
