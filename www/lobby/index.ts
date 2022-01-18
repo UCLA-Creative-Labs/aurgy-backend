@@ -18,13 +18,10 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   const theme = req.body.theme;
   const userId = req.body.id;
   const participants = [userId];
-  const songIds : string[] = [];
+  const songIds: string[] = [];
 
-  const manager = await User.fromId(userId) ?? null;
-  if (!manager) {
-    res.status(404).json('user dne');
-    return;
-  }
+  const manager = await User.fromId(userId);
+  if (!manager) return res.status(404).json('user not found in database').end();
 
   let retryNum = 0;
   let newLobbyId = generateLobbyId(userId, retryNum);
@@ -40,7 +37,6 @@ lobby_router.post('/', async (req: Request, res: Response) => {
     name: lobbyName,
     managerId: userId,
     participants: participants,
-    spotifyPlaylistId: undefined,
     songIds: songIds,
   });
 

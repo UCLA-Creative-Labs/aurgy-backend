@@ -61,22 +61,22 @@ export class Lobby extends DbItem implements ILobby {
   /**
    * The spotify id of playlist
    */
-  readonly spotifyPlaylistId?: string;
+  public readonly spotifyPlaylistId?: string;
 
   /**
    * The manager user id of a lobby
    */
-  readonly managerId: string;
+  public readonly managerId: string;
 
   /**
    * The theme of a lobby
    */
-  readonly theme: string;
+  public readonly theme: string;
 
   /**
    * The playlist name
    */
-  readonly name: string;
+  public readonly name: string;
 
   /**
    * The participants in a lobby
@@ -100,6 +100,7 @@ export class Lobby extends DbItem implements ILobby {
     super(id, COLLECTION.LOBBIES, key);
     this.managerId = props.managerId;
     this.#participants = props.participants ?? [];
+    this.#songIds = props.songIds ?? [];
     this.spotifyPlaylistId = props.spotifyPlaylistId;
     this.theme = props.theme;
     this.name = props.name;
@@ -117,33 +118,34 @@ export class Lobby extends DbItem implements ILobby {
   /**
    * validate that a calling user is the manager of a lobby
    */
-  public async validateManagerAccess(user : User) : Promise<boolean> {
-    const manager = await User.fromId(this.managerId);
-    const managerToken = await manager?.getAccessToken();
-    const accessToken = await user.getAccessToken();
-    return managerToken === accessToken;
+  public async validateManagerAccess(user: User): Promise<boolean> {
+    return this.managerId === user.id;
   }
 
   /**
    * Add a user to the lobby
    */
-  public async addUser(user : User, addUserId : string): Promise<void> {
+  public async addUser(user: User, addUserId: string): Promise<boolean> {
     const validate = await this.validateManagerAccess(user);
     if (validate) {
       this.#participants = [...this.#participants, addUserId];
       void this.writeToDatabase();
+      return true;
     }
+    return false;
   }
 
   /**
    * Removes a user from the lobby
    */
-  public async removeUser(user : User, removeUserId : string): Promise<void> {
+  public async removeUser(user: User, removeUserId: string): Promise<boolean> {
     const validate = await this.validateManagerAccess(user);
     if (validate) {
       this.#participants = this.#participants.filter(uid => uid !== removeUserId);
       void this.writeToDatabase();
+      return true;
     }
+    return false;
   }
 
   /**
