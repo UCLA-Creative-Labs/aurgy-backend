@@ -2,12 +2,11 @@ import { Router, Request, Response } from 'express';
 import { Lobby } from '../../lib/lobby';
 import { User } from '../../lib/user';
 import { validateJwt } from '../../utils/jwt';
-import { generateLobbyId } from '../../utils/lobby';
 import { lobby_id_router } from './:id';
 
 export const lobby_router = Router();
 
-lobby_router.use('/midtest', validateJwt);
+lobby_router.use('/middleware', validateJwt);
 
 // Creates a new lobby and returns the lobby id w/ lobby data
 /**
@@ -23,16 +22,7 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   const manager = await User.fromId(userId);
   if (!manager) return res.status(404).json('user not found in database').end();
 
-  let retryNum = 0;
-  let newLobbyId = generateLobbyId(userId, retryNum);
-  let exists = await Lobby.fromId(newLobbyId);
-  while (exists) {
-    retryNum++;
-    newLobbyId = generateLobbyId(userId, retryNum);
-    exists = await Lobby.fromId(newLobbyId);
-  }
-
-  const lobby = new Lobby(newLobbyId, {
+  const lobby = await Lobby.create({
     theme: theme,
     name: lobbyName,
     managerId: userId,
@@ -40,9 +30,11 @@ lobby_router.post('/', async (req: Request, res: Response) => {
     songIds: songIds,
   });
 
+  if(!lobby) return res.status(500).json('unable to create lobby at this time').end();
+
   void lobby.writeToDatabase();
 
-  res.status(200).json({ name: lobbyName, id: newLobbyId });
+  res.status(200).json({ name: lobby.name, id: lobby.id });
 });
 
 // Returns the lobbies a user is managing and participating in

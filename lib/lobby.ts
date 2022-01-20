@@ -1,4 +1,5 @@
 import { getClient } from '.';
+import { createSpotifyPlaylist } from '../utils/createSpotifyPlaylist';
 import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
 import { User } from './user';
@@ -59,6 +60,18 @@ export class Lobby extends DbItem implements ILobby {
   }
 
   /**
+   * A static function to create a new Lobby and corresponding Spotify playlist
+   *
+   * @returns a newly created Lobby object
+   */
+  public static async create(props: LobbyProps, key : string | null = null) : Promise<Lobby | null> {
+    // create new spotify playlist
+    const playlistId = await createSpotifyPlaylist();
+    const newProps = {...props, spotifyPlaylistId: playlistId};
+    return new Lobby(playlistId, newProps, key);
+  }
+
+  /**
    * The spotify id of playlist
    */
   public readonly spotifyPlaylistId?: string;
@@ -76,7 +89,10 @@ export class Lobby extends DbItem implements ILobby {
   /**
    * The playlist name
    */
-  public readonly name: string;
+  get name(): string {
+    return this.#name;
+  }
+  #name: string;
 
   /**
    * The participants in a lobby
@@ -96,14 +112,14 @@ export class Lobby extends DbItem implements ILobby {
 
   #songIds: string[];
 
-  constructor(id: string, props: LobbyProps, key: string | null = null) {
+  protected constructor(id: string, props: LobbyProps, key: string | null = null) {
     super(id, COLLECTION.LOBBIES, key);
     this.managerId = props.managerId;
     this.#participants = props.participants ?? [];
     this.#songIds = props.songIds ?? [];
     this.spotifyPlaylistId = props.spotifyPlaylistId;
     this.theme = props.theme;
-    this.name = props.name;
+    this.#name = props.name;
   }
 
   /**
@@ -112,7 +128,7 @@ export class Lobby extends DbItem implements ILobby {
    */
   public toJson(): DatabaseEntry {
     const {collectionName: _c, ...entry} = this;
-    return { ...entry, participants: this.#participants };
+    return { ...entry, name: this.#name, participants: this.#participants };
   }
 
   /**
@@ -125,11 +141,11 @@ export class Lobby extends DbItem implements ILobby {
   /**
    * Add a user to the lobby
    */
-  public async addUser(user: User, addUserId: string): Promise<boolean> {
+  public async addUser(user: User, addUserId: string, writeToDatabase = true): Promise<boolean> {
     const validate = await this.validateManagerAccess(user);
     if (validate) {
       this.#participants = [...this.#participants, addUserId];
-      void this.writeToDatabase();
+      writeToDatabase && void this.writeToDatabase();
       return true;
     }
     return false;
@@ -138,11 +154,11 @@ export class Lobby extends DbItem implements ILobby {
   /**
    * Removes a user from the lobby
    */
-  public async removeUser(user: User, removeUserId: string): Promise<boolean> {
+  public async removeUser(user: User, removeUserId: string, writeToDatabase = true): Promise<boolean> {
     const validate = await this.validateManagerAccess(user);
     if (validate) {
       this.#participants = this.#participants.filter(uid => uid !== removeUserId);
-      void this.writeToDatabase();
+      writeToDatabase && void this.writeToDatabase();
       return true;
     }
     return false;
@@ -151,15 +167,9 @@ export class Lobby extends DbItem implements ILobby {
   /**
    * Update lobby name
    */
-  public async updateName(): Promise<void> {
-    void this.writeToDatabase();
-  }
-
-  /**
-   * Update the playlist based on the name and songs
-   */
-  public async updatePlaylist(): Promise<void> {
-    void this.writeToDatabase();
+  public async updateName(name: string, writeToDatabase = true): Promise<void> {
+    this.#name = name;
+    writeToDatabase && void this.writeToDatabase();
   }
 
   /**
