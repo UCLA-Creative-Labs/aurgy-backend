@@ -16,8 +16,6 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   const lobbyName = req.body.lobbyName;
   const theme = req.body.theme;
   const userId = req.body.id;
-  const participants = [userId];
-  const songIds: string[] = [];
 
   const manager = await User.fromId(userId);
   if (!manager) return res.status(404).json('user not found in database').end();
@@ -26,8 +24,6 @@ lobby_router.post('/', async (req: Request, res: Response) => {
     theme: theme,
     name: lobbyName,
     managerId: userId,
-    participants: participants,
-    songIds: songIds,
   });
 
   if(!lobby) return res.status(500).json('unable to create lobby at this time').end();

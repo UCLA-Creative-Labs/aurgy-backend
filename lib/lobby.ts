@@ -7,21 +7,11 @@ import { User } from './user';
 type DatabaseEntry = Omit<ILobby, 'collectionName'>;
 type ClientResponse = Omit<DatabaseEntry, 'users' | 'uri'>;
 
-export interface LobbyProps {
+export interface LobbyCreateProps {
   /**
-  * The spotify id of playlist
-  */
-  readonly spotifyPlaylistId?: string;
-
-  /**
-   * The manager of a lobby
-   */
+    * The manager of a lobby
+    */
   readonly managerId: string;
-
-  /**
-   * The participants in a lobby
-   */
-  readonly participants: string[];
 
   /**
    * The theme of a lobby
@@ -29,9 +19,21 @@ export interface LobbyProps {
   readonly theme: string;
 
   /**
-   * The playlist name
-   */
+    * The playlist name
+    */
   readonly name: string;
+}
+
+export interface LobbyProps extends LobbyCreateProps{
+  /**
+  * The spotify id of playlist
+  */
+  readonly spotifyPlaylistId: string;
+
+  /**
+   * The participants in a lobby
+   */
+  readonly participants: string[];
 
   /**
    * The list of song ids in the playlist
@@ -64,17 +66,25 @@ export class Lobby extends DbItem implements ILobby {
    *
    * @returns a newly created Lobby object
    */
-  public static async create(props: LobbyProps, key : string | null = null) : Promise<Lobby | null> {
+  public static async create(props: LobbyCreateProps, key : string | null = null) : Promise<Lobby | null> {
     // create new spotify playlist
+    const participants = [props.managerId];
+    const songIds: string[] = [];
     const playlistId = await createSpotifyPlaylist();
-    const newProps = {...props, spotifyPlaylistId: playlistId};
+    const newProps = {
+      ...props,
+      spotifyPlaylistId: playlistId,
+      participants: participants,
+      songIds: songIds,
+    };
+
     return new Lobby(playlistId, newProps, key);
   }
 
   /**
    * The spotify id of playlist
    */
-  public readonly spotifyPlaylistId?: string;
+  public readonly spotifyPlaylistId: string;
 
   /**
    * The manager user id of a lobby
@@ -143,12 +153,10 @@ export class Lobby extends DbItem implements ILobby {
    */
   public async addUser(user: User, addUserId: string, writeToDatabase = true): Promise<boolean> {
     const validate = await this.validateManagerAccess(user);
-    if (validate) {
-      this.#participants = [...this.#participants, addUserId];
-      writeToDatabase && void this.writeToDatabase();
-      return true;
-    }
-    return false;
+    if (!validate) return false;
+    this.#participants.push(addUserId);
+    writeToDatabase && void this.writeToDatabase();
+    return true;
   }
 
   /**
@@ -156,12 +164,10 @@ export class Lobby extends DbItem implements ILobby {
    */
   public async removeUser(user: User, removeUserId: string, writeToDatabase = true): Promise<boolean> {
     const validate = await this.validateManagerAccess(user);
-    if (validate) {
-      this.#participants = this.#participants.filter(uid => uid !== removeUserId);
-      writeToDatabase && void this.writeToDatabase();
-      return true;
-    }
-    return false;
+    if (!validate) return false;
+    this.#participants = this.#participants.filter(uid => uid !== removeUserId);
+    writeToDatabase && void this.writeToDatabase();
+    return true;
   }
 
   /**
