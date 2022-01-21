@@ -70,7 +70,6 @@ export class Lobby extends DbItem implements ILobby {
     const songIds: string[] = [];
     const newProps = {
       ...props,
-      spotifyPlaylistId: playlistId,
       participants: participants,
       songIds: songIds,
     };
@@ -119,9 +118,9 @@ export class Lobby extends DbItem implements ILobby {
 
   #songIds: string[];
 
-  protected constructor(id: string, props: LobbyProps, key: string | null = null) {
-    super(id, COLLECTION.LOBBIES, key);
-    this.spotifyPlaylistId = props.spotifyPlaylistId;
+  protected constructor(playlistId: string, props: LobbyProps, key: string | null = null) {
+    super(playlistId, COLLECTION.LOBBIES, key);
+    this.spotifyPlaylistId = playlistId;
     this.managerId = props.managerId;
     this.theme = props.theme;
     this.#name = props.name;
