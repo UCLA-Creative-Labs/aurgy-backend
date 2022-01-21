@@ -41,17 +41,16 @@ export interface LobbyProps extends LobbyCreateProps{
   readonly songIds: string[];
 }
 
-export interface ILobby extends LobbyProps, IDbItem {
-}
+export interface ILobby extends LobbyProps, IDbItem {}
 
 /**
  * The class containing a user and their data
  */
 export class Lobby extends DbItem implements ILobby {
   /**
-   * A static function to query for a user from their id
+   * A static function to query for a Lobby from its id
    *
-   * @returns a user object if the id exists in the database
+   * @returns a Lobby object if the id exists in the database
    */
   public static async fromId(id: string): Promise<Lobby | null> {
     const client = await getClient();
@@ -142,31 +141,20 @@ export class Lobby extends DbItem implements ILobby {
   }
 
   /**
-   * validate that a calling user is the manager of a lobby
-   */
-  public async validateManagerAccess(user: User): Promise<boolean> {
-    return this.managerId === user.id;
-  }
-
-  /**
    * Add a user to the lobby
    */
-  public async addUser(user: User, addUserId: string, writeToDatabase = true): Promise<boolean> {
-    const validate = await this.validateManagerAccess(user);
-    if (!validate) return false;
+  public async addUser(manager: User, addUserId: string, writeToDb = true): Promise<boolean> {
     this.#participants.push(addUserId);
-    writeToDatabase && void this.writeToDatabase();
+    writeToDb && void this.writeToDatabase();
     return true;
   }
 
   /**
    * Removes a user from the lobby
    */
-  public async removeUser(user: User, removeUserId: string, writeToDatabase = true): Promise<boolean> {
-    const validate = await this.validateManagerAccess(user);
-    if (!validate) return false;
+  public async removeUser(manager: User, removeUserId: string, writeToDb = true): Promise<boolean> {
     this.#participants = this.#participants.filter(uid => uid !== removeUserId);
-    writeToDatabase && void this.writeToDatabase();
+    writeToDb && void this.writeToDatabase();
     return true;
   }
 
