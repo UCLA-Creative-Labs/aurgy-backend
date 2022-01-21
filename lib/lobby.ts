@@ -23,12 +23,7 @@ export interface LobbyCreateProps {
   readonly name: string;
 }
 
-export interface LobbyProps extends LobbyCreateProps{
-  /**
-  * The spotify id of playlist
-  */
-  readonly spotifyPlaylistId: string;
-
+export interface LobbyProps extends LobbyCreateProps {
   /**
    * The participants in a lobby
    */
@@ -40,7 +35,12 @@ export interface LobbyProps extends LobbyCreateProps{
   readonly songIds: string[];
 }
 
-export interface ILobby extends LobbyProps, IDbItem {}
+export interface ILobby extends LobbyProps, IDbItem {
+  /**
+  * The spotify id of playlist
+  */
+  readonly spotifyPlaylistId: string;
+}
 
 /**
  * The class containing a user and their data
