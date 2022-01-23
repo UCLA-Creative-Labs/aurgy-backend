@@ -5,6 +5,7 @@ import { getClient } from '../lib';
 import {logger} from '../utils';
 
 // ROUTES
+import { lobby_router } from './lobby';
 import { me_router } from './me';
 
 const PORT = process.env.PORT ?? 3000;
@@ -26,7 +27,8 @@ app.get('/', async (_req, res) => {
   res.send(`Connection to db established!! Count: ${JSON.stringify(count)}`);
 });
 
+// LOGIN
+app.use('/lobby', lobby_router);
 app.use('/me', me_router);
 
 app.listen(PORT, () => logger.info(`App listening on PORT ${PORT}`));
-
