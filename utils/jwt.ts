@@ -18,7 +18,24 @@ export function validateJwt(req: Request, res: Response, next: NextFunction) {
   jwt.verify(token, process.env.TOKEN_SECRET as string, (err: VerifyErrors, decoded: any) => {
     if (err) {
       logger.error(err);
-      return res.sendStatus(403).end();
+      return res.status(403).json("refresh token is expired").end();
+    }
+
+    req.body.id = decoded.id;
+    next();
+  });
+}
+
+export function validateLobbyJwt(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.body.lobbyToken;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.sendStatus(401).end();
+
+  jwt.verify(token, process.env.TOKEN_SECRET as string, (err: VerifyErrors, decoded: any) => {
+    if (err) {
+      logger.error(err);
+      return res.status(403).json("expired token").end();
     }
 
     req.body.id = decoded.id;

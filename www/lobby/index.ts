@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { Lobby } from '../../lib/lobby';
 import { User } from '../../lib/user';
 import { validateJwt } from '../../utils/jwt';
-import { lobby_id_router } from './:id';
+import { lobby_id_router } from './id';
 
 export const lobby_router = Router();
 
