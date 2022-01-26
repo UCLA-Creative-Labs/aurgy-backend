@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express';
+import { User } from '../../lib';
+import { Lobby } from '../../lib/lobby';
 
 export const lobby_id_router = Router();
 
@@ -15,7 +17,16 @@ lobby_id_router.post('/:id', async (req: Request, res: Response) => {
  * Body Params: id, refreshToken
  */
 lobby_id_router.get('/:id', async (req: Request, res: Response) => {
-  res.status(200).json('placeholder get');
+  const lobbyId = req.params.id;
+  const userId = req.body.id;
+  const lobby = await Lobby.fromId(lobbyId);
+  if (!lobby) return res.status(404).json('Lobby not found in database').end();
+
+  const user = await User.fromId(userId);
+  if (!user) return res.status(404).json('User not found in database').end();
+  if (!lobby.participants.includes(userId)) return res.status(406).json('User is not part of the lobby').end();
+
+  res.status(200).json(lobby.toJson());
 });
 
 // Update lobby information
@@ -23,7 +34,22 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
  * Body Params: id, name, refreshToken
  */
 lobby_id_router.patch('/:id', async (req: Request, res: Response) => {
-  res.status(200).json('placeholder patch');
+  const lobbyId = req.params.id;
+  const userId = req.body.id;
+  const name : string = req.body.lobbyName;
+  const lobby = await Lobby.fromId(lobbyId);
+  if (!lobby) return res.status(404).json('Lobby not found in database').end();
+
+  const user = await User.fromId(userId);
+  if (!user) return res.status(404).json('User not found in database').end();
+
+  if (lobby.managerId !== userId) return res.status(406).json('User is not a manager of the lobby').end();
+
+  // do some lobby name sanitizing maybe
+
+  await lobby.updateName(name);
+
+  res.status(200).end();
 });
 
 // Delete a lobby
@@ -32,4 +58,25 @@ lobby_id_router.patch('/:id', async (req: Request, res: Response) => {
  */
 lobby_id_router.delete('/:id', async (req: Request, res: Response) => {
   res.status(200).json('placeholder delete');
+});
+
+// Remove another user from the lobby
+/**
+ * Body Params: id, refreshToken
+ */
+lobby_id_router.delete('/:id/user/:deleteId', async (req: Request, res: Response) => {
+  const lobbyId = req.params.id;
+  const deleteUserId = req.params.deleteId;
+  const userId = req.body.id;
+  const lobby = await Lobby.fromId(lobbyId);
+  if (!lobby) return res.status(404).json('Lobby not found in database').end();
+
+  const user = await User.fromId(userId);
+  if (!user) return res.status(404).json('User not found in database').end();
+
+  if (lobby.managerId !== userId) return res.status(406).json('User is not a manager of the lobby').end();
+
+  const deleted = await lobby.removeUser(deleteUserId);
+  if (!deleted) return res.status(500).json('user was unable to be removed from lobby').end();
+  res.status(200).end();
 });
