@@ -65,8 +65,10 @@ export class Lobby extends DbItem implements ILobby {
    * @returns a newly created Lobby object
    */
   public static async create(props: LobbyCreateProps, key : string | null = null) : Promise<Lobby | null> {
+    const managerId = props.managerId;
     const playlistId = await createSpotifyPlaylist();
-    const participants = [props.managerId];
+    if (!playlistId) return null;
+    const participants = [managerId];
     const songIds: string[] = [];
     const newProps = {
       ...props,
@@ -150,6 +152,7 @@ export class Lobby extends DbItem implements ILobby {
    * Removes a user from the lobby
    */
   public async removeUser(removeUserId: string, writeToDb = true): Promise<boolean> {
+    if (removeUserId === this.managerId || !this.#participants.includes(removeUserId)) return false;
     this.#participants = this.#participants.filter(uid => uid !== removeUserId);
     writeToDb && void this.writeToDatabase();
     return true;
