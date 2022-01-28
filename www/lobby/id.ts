@@ -6,17 +6,17 @@ import { validateJwt, validateLobbyJwt } from '../../utils/jwt';
 
 export const lobby_id_router = Router();
 
-const joinLobby = async (req: Request, res: Response, next: NextFunction) => {
+const joinLobby = async (req: Request, res: Response) => {
   // check if token is valid
   const lobbyId: string = req.body.lobbyId;
   const lobby = await Lobby.fromId(lobbyId);
 
-  if (!lobby || lobbyId != req.params.id) return res.status(406).end("lobby token is invalid");
-  
+  if (!lobby || lobbyId != req.params.id) return res.status(406).end('lobby token is invalid');
+
   //add user to lobby
   lobby?.addUser(req.body.userId);
   res.status(200).send({...lobby.getClientResponse()});
-}
+};
 
 // Join a lobby
 /**
@@ -26,12 +26,12 @@ lobby_id_router.post('/:id', validateJwt, async (req: Request, res: Response, ne
   // check if user is valid
   const userId: string = req.body.id;
   const user = await User.fromId(userId);
-  if (!user) return res.status(404).json("invalid user").end();
+  if (!user) return res.status(404).json('invalid user').end();
 
   // check i user is already in lobby
   const lobbyId = req.params.id;
   const lobby = await Lobby.fromId(lobbyId);
-  if (!lobby) return res.status(406).json("lobby doesn't exist").end(); // the design doc doesn't specific what error code to use if the lobby id doesn't exist
+  if (!lobby) return res.status(406).json('lobby doesn\'t exist').end(); // the design doc doesn't specific what error code to use if the lobby id doesn't exist
   if (lobby.participants.includes(userId)) {
     return res.status(200).send({...lobby.getClientResponse()});
   }

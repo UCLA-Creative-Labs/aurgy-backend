@@ -9,14 +9,18 @@ export function genJwt(id: string): string {
   return jwt.sign({id}, process.env.TOKEN_SECRET, { expiresIn: '7d' });
 }
 
-function validateJwtToken(req: Request, res: Response, next: NextFunction, token: string | undefined, bodyKey: string ) {
-  console.log("in helper function")
+function validateJwtToken(
+  req: Request, res: Response,
+  next: NextFunction,
+  token: string | undefined,
+  bodyKey: string) {
+
   if (token == null) return res.sendStatus(401).end();
 
   jwt.verify(token, process.env.TOKEN_SECRET as string, (err: VerifyErrors, decoded: any) => {
     if (err) {
       logger.error(err);
-      return res.status(403).json("token is expired").end();
+      return res.status(403).json('token is expired').end();
     }
     req.body[bodyKey] = decoded.id;
     next();
@@ -27,11 +31,11 @@ export function validateJwt(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
 
-  validateJwtToken(req, res, next, token, "id");
+  validateJwtToken(req, res, next, token, 'id');
 }
 
 export function validateLobbyJwt(req: Request, res: Response, next: NextFunction) {
   const token = req.body.lobbyToken;
 
-  validateJwtToken(req, res, next, token, "lobbyId");
+  validateJwtToken(req, res, next, token, 'lobbyId');
 }
