@@ -42,7 +42,7 @@ lobby_id_router.post('/:id', validateJwt, async (req: Request, res: Response, ne
 /**
  * Body Params: id, refreshToken
  */
- lobby_id_router.get('/:id', async (req: Request, res: Response) => {
+lobby_id_router.get('/:id', async (req: Request, res: Response) => {
   const lobbyId = req.params.id;
   const userId = req.body.id;
   const verified = await verifyIds(userId, lobbyId);
