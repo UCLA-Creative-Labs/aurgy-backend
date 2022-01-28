@@ -8,7 +8,7 @@ export const lobby_id_router = Router();
 
 const joinLobby = async (req: Request, res: Response, next: NextFunction) => {
   // check if token is valid
-  const lobbyId: string = req.body.id;
+  const lobbyId: string = req.body.lobbyId;
   const lobby = await Lobby.fromId(lobbyId);
 
   if (!lobby || lobbyId != req.params.id) return res.status(406).end("lobby token is invalid");
