@@ -27,7 +27,7 @@ lobby_id_router.post('/:id', validateJwt, async (req: Request, res: Response, ne
   const user = await User.fromId(userId);
   if (!user) return res.status(404).json('User does not exist').end();
 
-  // check i user is already in lobby
+  // check if user is already in lobby
   const lobbyId = req.params.id;
   const lobby = await Lobby.fromId(lobbyId);
   if (!lobby) return res.status(404).json('lobby doesn\'t exist').end(); // the design doc doesn't specific what error code to use if the lobby id doesn't exist
