@@ -49,11 +49,11 @@ export function validateLobbyJwt(req: Request, res: Response, next: NextFunction
   const token = req.body.lobbyToken;
 
   validateJwtToken({
-      req: req,
-      res: res,
-      next: next,
-      token: token,
-      key: 'lobbyId',
-      tokenName: 'Lobby token',
+    req: req,
+    res: res,
+    next: next,
+    token: token,
+    key: 'lobbyId',
+    tokenName: 'Lobby token',
   });
 }

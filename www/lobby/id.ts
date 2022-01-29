@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import { User } from '../../lib';
 import { Lobby } from '../../lib/lobby';
 import { validateJwt, validateLobbyJwt } from '../../utils/jwt';
@@ -9,7 +9,7 @@ export const lobby_id_router = Router();
 /**
  * Body Params: id, lobbyToken, refreshToken
  */
-lobby_id_router.post('/:id', validateJwt, validateLobbyJwt, async (req: Request, res: Response, next: NextFunction) => {
+lobby_id_router.post('/:id', validateJwt, validateLobbyJwt, async (req: Request, res: Response) => {
   const userId: string = req.body.id;
   const lobbyId: string = req.params.id;
   const decodedLobbyId: string | undefined = req.body.lobbyId;
@@ -26,7 +26,11 @@ lobby_id_router.post('/:id', validateJwt, validateLobbyJwt, async (req: Request,
   }
 
   if(!isParticipant) {
-    lobby.addUser(userId);
+    const added = await lobby.addUser(userId);
+    /** as of now, addUser should always return true
+     * this is just in case we want to handle the possibility that writing to the database fails
+    */
+    if (!added) return res.status(406).json('Error writing to database').end(); // not sure what error code to use, if it failed to write to database
   }
   return res.status(200).send({...lobby.getClientResponse()});
 });
