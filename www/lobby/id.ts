@@ -32,7 +32,7 @@ lobby_id_router.post('/:id', validateJwt, validateLobbyJwt, async (req: Request,
     */
     if (!added) return res.status(406).json('Error writing to database').end(); // not sure what error code to use, if it failed to write to database
   }
-  return res.status(200).send({...lobby.getClientResponse()});
+  return res.status(200).send(lobby.getClientResponse());
 });
 
 // Get lobby specific info
