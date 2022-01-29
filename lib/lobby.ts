@@ -1,4 +1,4 @@
-import { getClient } from '.';
+import { getClient, User } from '.';
 import { createSpotifyPlaylist } from '../utils/createSpotifyPlaylist';
 import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
@@ -174,5 +174,13 @@ export class Lobby extends DbItem implements ILobby {
   public getClientResponse(): ClientResponse {
     const {collectionName: _c, ...response} = this;
     return response;
+  }
+
+  /**
+   * Determines is a User is in the Lobby
+   */
+  public containsParticipant(user: string | User): boolean {
+    const userId = typeof user == 'string' ? user : user.id;
+    return this.#participants.includes(userId);
   }
 }

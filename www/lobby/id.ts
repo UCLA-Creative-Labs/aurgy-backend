@@ -5,37 +5,31 @@ import { validateJwt, validateLobbyJwt } from '../../utils/jwt';
 
 export const lobby_id_router = Router();
 
-const joinLobby = async (req: Request, res: Response) => {
-  // check if token is valid
-  const lobbyId: string = req.body.lobbyId;
-  const lobby = await Lobby.fromId(lobbyId);
-
-  if (!lobby || lobbyId != req.params.id) return res.status(406).end('lobby token is invalid');
-
-  //add user to lobby
-  lobby?.addUser(req.body.userId);
-  res.status(200).send({...lobby.getClientResponse()});
-};
-
 // Join a lobby
 /**
  * Body Params: id, lobbyToken, refreshToken
  */
-lobby_id_router.post('/:id', validateJwt, async (req: Request, res: Response, next: NextFunction) => {
-  // check if user is valid
+lobby_id_router.post('/:id', validateJwt, validateLobbyJwt, async (req: Request, res: Response, next: NextFunction) => {
   const userId: string = req.body.id;
-  const user = await User.fromId(userId);
-  if (!user) return res.status(404).json('User does not exist').end();
+  const lobbyId: string = req.params.id;
+  const decodedLobbyId: string | undefined = req.body.lobbyId;
 
-  // check if user is already in lobby
-  const lobbyId = req.params.id;
-  const lobby = await Lobby.fromId(lobbyId);
-  if (!lobby) return res.status(404).json('lobby doesn\'t exist').end(); // the design doc doesn't specific what error code to use if the lobby id doesn't exist
-  if (lobby.participants.includes(userId)) {
-    return res.status(200).send({...lobby.getClientResponse()});
+  //check if user and lobby id's are valid
+  const verified = await verifyIds(userId, lobbyId);
+  if (!verified) return res.status(404).json('User or Lobby not found in database').end();
+  const lobby = verified[1];
+
+  const isParticipant = lobby.containsParticipant(userId);
+
+  if (!isParticipant && lobbyId !== decodedLobbyId) {
+    return res.status(406).json('Lobby token is invalid').end();
   }
-  next();
-}, validateLobbyJwt, joinLobby);
+
+  if(!isParticipant) {
+    lobby.addUser(userId);
+  }
+  return res.status(200).send({...lobby.getClientResponse()});
+});
 
 // Get lobby specific info
 /**
