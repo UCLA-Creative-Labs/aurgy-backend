@@ -17,7 +17,7 @@ lobby_id_router.post('/:id', validateJwt, validateLobbyJwt, async (req: Request,
   //check if user and lobby id's are valid
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const lobby = verified[1];
+  const {lobby} = verified;
 
   const isParticipant = lobby.containsParticipant(userId);
 
@@ -44,7 +44,7 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
   const userId = req.body.id;
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const [_user, lobby] = verified;
+  const {lobby} = verified;
   if (!lobby.participants.includes(userId)) return res.status(406).json('User is not part of the lobby').end();
 
   res.status(200).json(lobby.toJson());
@@ -60,7 +60,7 @@ lobby_id_router.patch('/:id', async (req: Request, res: Response) => {
   const name: string = req.body.lobbyName;
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const [_user, lobby] = verified;
+  const {lobby} = verified;
 
   if (lobby.managerId !== userId) return res.status(406).json('User is not a manager of the lobby').end();
 
@@ -89,7 +89,7 @@ lobby_id_router.delete('/:id/user/:deleteId', async (req: Request, res: Response
   const userId = req.body.id;
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const [_user, lobby] = verified;
+  const {lobby} = verified;
 
   if (lobby.managerId !== userId) return res.status(406).json('User is not a manager of the lobby').end();
 
@@ -98,10 +98,14 @@ lobby_id_router.delete('/:id/user/:deleteId', async (req: Request, res: Response
   res.status(200).end();
 });
 
-const verifyIds = async (userId : string, lobbyId : string) : Promise<[User, Lobby] | null> => {
+const verifyIds = async (userId : string, lobbyId : string) : Promise<{user: User, lobby: Lobby} | null> => {
   const user = await User.fromId(userId);
   if (!user) return null;
   const lobby = await Lobby.fromId(lobbyId);
   if (!lobby) return null;
-  return [user, lobby];
+  // return [user, lobby];
+  return {
+    user: user,
+    lobby: lobby,
+  }
 };

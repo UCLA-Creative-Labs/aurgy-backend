@@ -24,7 +24,7 @@ function validateJwtToken({req, res, next, token, key, tokenName}: validateJwtOp
   jwt.verify(token, process.env.TOKEN_SECRET as string, (err: VerifyErrors, decoded: any) => {
     if (err) {
       logger.error(err);
-      return res.status(403).json(tokenName + ' is expired').end();
+      return res.status(403).json({key: true}).end();
     }
     req.body[key] = decoded.id;
     next();
