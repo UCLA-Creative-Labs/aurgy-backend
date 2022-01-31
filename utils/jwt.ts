@@ -15,10 +15,9 @@ interface validateJwtOptions {
   next: NextFunction;
   token?: string;
   key: string;
-  tokenName: string;
 }
 
-function validateJwtToken({req, res, next, token, key, tokenName}: validateJwtOptions) {
+function validateJwtToken({req, res, next, token, key}: validateJwtOptions) {
   if (token == null) return res.sendStatus(401).end();
 
   jwt.verify(token, process.env.TOKEN_SECRET as string, (err: VerifyErrors, decoded: any) => {
@@ -41,7 +40,6 @@ export function validateJwt(req: Request, res: Response, next: NextFunction) {
     next: next,
     token: token,
     key: 'id',
-    tokenName: 'User token',
   });
 }
 
@@ -54,6 +52,5 @@ export function validateLobbyJwt(req: Request, res: Response, next: NextFunction
     next: next,
     token: token,
     key: 'lobbyId',
-    tokenName: 'Lobby token',
   });
 }

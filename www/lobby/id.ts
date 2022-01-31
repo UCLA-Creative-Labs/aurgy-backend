@@ -103,9 +103,8 @@ const verifyIds = async (userId : string, lobbyId : string) : Promise<{user: Use
   if (!user) return null;
   const lobby = await Lobby.fromId(lobbyId);
   if (!lobby) return null;
-  // return [user, lobby];
   return {
     user: user,
     lobby: lobby,
-  }
+  };
 };
