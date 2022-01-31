@@ -53,7 +53,7 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
 });
 
 me_router.get('/', validateJwt, async (req: Request, res: Response): Promise<void> => {
-  const id: string = req.body.id;
+  const id: string = req.body.userId;
 
   const user = await User.fromId(id);
   if (!user) return res.status(404).end();
@@ -64,7 +64,7 @@ me_router.get('/', validateJwt, async (req: Request, res: Response): Promise<voi
 });
 
 me_router.delete('/', validateJwt, async (req: Request, res: Response): Promise<void> => {
-  const id: string = req.body.id;
+  const id: string = req.body.userId;
 
   const user = await User.fromId(id);
   if (!user) return res.status(404).end();

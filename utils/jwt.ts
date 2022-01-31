@@ -39,7 +39,7 @@ export function validateJwt(req: Request, res: Response, next: NextFunction) {
     res: res,
     next: next,
     token: token,
-    key: 'id',
+    key: 'userId',
   });
 }
 

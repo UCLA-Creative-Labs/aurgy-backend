@@ -10,7 +10,7 @@ export const lobby_id_router = Router();
  * Body Params: id, lobbyToken, refreshToken
  */
 lobby_id_router.post('/:id', validateJwt, validateLobbyJwt, async (req: Request, res: Response) => {
-  const userId: string = req.body.id;
+  const userId: string = req.body.userId;
   const lobbyId: string = req.params.id;
   const decodedLobbyId: string | undefined = req.body.lobbyId;
 
