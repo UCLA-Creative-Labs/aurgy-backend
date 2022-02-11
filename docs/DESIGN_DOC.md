@@ -500,7 +500,7 @@ function [`validateLobbyJwt`](../utils/jwt.ts#L46-56) for more details.
 
 | Body Parameter | Description                             |
 | ---------------- | --------------------------------------- |
-| lobbyId    | The token for a user: `TOKEN`    |
+| lobbyToken    | The token for a lobby: `TOKEN`    |
 
 ---
 

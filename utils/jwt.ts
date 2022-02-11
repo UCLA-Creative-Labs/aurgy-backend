@@ -23,7 +23,7 @@ function validateJwtToken({req, res, next, token, key}: validateJwtOptions) {
   jwt.verify(token, process.env.TOKEN_SECRET as string, (err: VerifyErrors, decoded: any) => {
     if (err) {
       logger.error(err);
-      return res.status(403).json({key: true}).end();
+      return res.status(403).json({[key]: true}).end();
     }
     req.body[key] = decoded.id;
     next();
@@ -35,10 +35,10 @@ export function validateJwt(req: Request, res: Response, next: NextFunction) {
   const token = authHeader && authHeader.split(' ')[1];
 
   validateJwtToken({
-    req: req,
-    res: res,
-    next: next,
-    token: token,
+    req,
+    res,
+    next,
+    token,
     key: 'userId',
   });
 }
@@ -47,10 +47,10 @@ export function validateLobbyJwt(req: Request, res: Response, next: NextFunction
   const token = req.body.lobbyToken;
 
   validateJwtToken({
-    req: req,
-    res: res,
-    next: next,
-    token: token,
+    req,
+    res,
+    next,
+    token,
     key: 'lobbyId',
   });
 }
