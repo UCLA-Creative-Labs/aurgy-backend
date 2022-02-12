@@ -41,7 +41,7 @@ lobby_id_router.post('/:id', validateJwt, validateLobbyJwt, async (req: Request,
 });
 
 // Get lobby specific info
-/**`
+/**
  * Body Params: id, refreshToken
  */
 lobby_id_router.get('/:id', async (req: Request, res: Response) => {
