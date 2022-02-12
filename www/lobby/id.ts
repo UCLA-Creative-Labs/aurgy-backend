@@ -1,6 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { User } from '../../lib';
 import { Lobby } from '../../lib/lobby';
+import { validateUserJwt, validateLobbyJwt } from '../../utils/jwt';
+
+interface VerifiedObjects {
+  user: User;
+  lobby: Lobby;
+}
 
 export const lobby_id_router = Router();
 
@@ -8,8 +14,30 @@ export const lobby_id_router = Router();
 /**
  * Body Params: id, lobbyToken, refreshToken
  */
-lobby_id_router.post('/:id', async (req: Request, res: Response) => {
-  res.status(200).json('placeholder post');
+lobby_id_router.post('/:id', validateUserJwt, validateLobbyJwt, async (req: Request, res: Response) => {
+  const userId: string = req.body.userId;
+  const lobbyId: string = req.params.id;
+  const decodedLobbyId: string | undefined = req.body.lobbyId;
+
+  //check if user and lobby id's are valid
+  const verified = await verifyIds(userId, lobbyId);
+  if (!verified) return res.status(404).json('User or Lobby not found in database').end();
+  const { lobby } = verified;
+
+  const isParticipant = lobby.containsParticipant(userId);
+
+  if (!isParticipant && lobbyId !== decodedLobbyId) {
+    return res.status(406).json('Lobby token is invalid').end();
+  }
+
+  if (!isParticipant) {
+    const added = await lobby.addUser(userId);
+    /** as of now, addUser should always return true
+     * this is just in case we want to handle the possibility that writing to the database fails
+    */
+    if (!added) return res.status(406).json('Error writing to database').end(); // not sure what error code to use, if it failed to write to database
+  }
+  res.status(200).send(lobby.getClientResponse());
 });
 
 // Get lobby specific info
@@ -18,10 +46,10 @@ lobby_id_router.post('/:id', async (req: Request, res: Response) => {
  */
 lobby_id_router.get('/:id', async (req: Request, res: Response) => {
   const lobbyId = req.params.id;
-  const userId = req.body.id;
+  const userId = req.body.userId;
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const [_user, lobby] = verified;
+  const { lobby } = verified;
   if (!lobby.participants.includes(userId)) return res.status(406).json('User is not part of the lobby').end();
 
   res.status(200).json(lobby.toJson());
@@ -33,11 +61,11 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
  */
 lobby_id_router.patch('/:id', async (req: Request, res: Response) => {
   const lobbyId = req.params.id;
-  const userId = req.body.id;
+  const userId = req.body.userId;
   const name: string = req.body.lobbyName;
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const [_user, lobby] = verified;
+  const { lobby } = verified;
 
   if (lobby.managerId !== userId) return res.status(406).json('User is not a manager of the lobby').end();
 
@@ -63,10 +91,10 @@ lobby_id_router.delete('/:id', async (req: Request, res: Response) => {
 lobby_id_router.delete('/:id/user/:deleteId', async (req: Request, res: Response) => {
   const lobbyId = req.params.id;
   const deleteUserId = req.params.deleteId;
-  const userId = req.body.id;
+  const userId = req.body.userId;
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const [_user, lobby] = verified;
+  const { lobby } = verified;
 
   if (lobby.managerId !== userId) return res.status(406).json('User is not a manager of the lobby').end();
 
@@ -75,10 +103,13 @@ lobby_id_router.delete('/:id/user/:deleteId', async (req: Request, res: Response
   res.status(200).end();
 });
 
-const verifyIds = async (userId : string, lobbyId : string) : Promise<[User, Lobby] | null> => {
+const verifyIds = async (userId: string, lobbyId: string): Promise<VerifiedObjects | null> => {
   const user = await User.fromId(userId);
   if (!user) return null;
   const lobby = await Lobby.fromId(lobbyId);
   if (!lobby) return null;
-  return [user, lobby];
+  return {
+    user,
+    lobby,
+  };
 };
