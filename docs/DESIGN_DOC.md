@@ -489,7 +489,7 @@ All content types will be in the `application/json` form:
 
 Authentication occurs with a JSON Web Token (JWT). JWT let's us cryptographically store the user's
 id through a hash. This allows us to verify the identity of a user securely, and immediately access 
-their information. See the function [`validateJwt`](../utils/jwt.ts#L33-L44) for more details.
+their information. See the function [`validateUserJwt`](../utils/jwt.ts#L33-L44) for more details.
 
 | Header Parameter | Description                             |
 | ---------------- | --------------------------------------- |

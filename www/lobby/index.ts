@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { Lobby } from '../../lib/lobby';
 import { User } from '../../lib/user';
-import { validateJwt } from '../../utils/jwt';
+import { validateUserJwt } from '../../utils/jwt';
 import { lobby_id_router } from './id';
 
 export const lobby_router = Router();
 
-lobby_router.use('/middleware', validateJwt);
+lobby_router.use('/middleware', validateUserJwt);
 
 // Creates a new lobby and returns the lobby id w/ lobby data
 /**
