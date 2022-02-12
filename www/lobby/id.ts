@@ -3,6 +3,11 @@ import { User } from '../../lib';
 import { Lobby } from '../../lib/lobby';
 import { validateJwt, validateLobbyJwt } from '../../utils/jwt';
 
+interface VerifiedObjects {
+  user: User;
+  lobby: Lobby;
+}
+
 export const lobby_id_router = Router();
 
 // Join a lobby
@@ -17,7 +22,7 @@ lobby_id_router.post('/:id', validateJwt, validateLobbyJwt, async (req: Request,
   //check if user and lobby id's are valid
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const {lobby} = verified;
+  const { lobby } = verified;
 
   const isParticipant = lobby.containsParticipant(userId);
 
@@ -25,26 +30,26 @@ lobby_id_router.post('/:id', validateJwt, validateLobbyJwt, async (req: Request,
     return res.status(406).json('Lobby token is invalid').end();
   }
 
-  if(!isParticipant) {
+  if (!isParticipant) {
     const added = await lobby.addUser(userId);
     /** as of now, addUser should always return true
      * this is just in case we want to handle the possibility that writing to the database fails
     */
     if (!added) return res.status(406).json('Error writing to database').end(); // not sure what error code to use, if it failed to write to database
   }
-  return res.status(200).send(lobby.getClientResponse());
+  res.status(200).send(lobby.getClientResponse());
 });
 
 // Get lobby specific info
-/**
+/**`
  * Body Params: id, refreshToken
  */
 lobby_id_router.get('/:id', async (req: Request, res: Response) => {
   const lobbyId = req.params.id;
-  const userId = req.body.id;
+  const userId = req.body.userId;
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const {lobby} = verified;
+  const { lobby } = verified;
   if (!lobby.participants.includes(userId)) return res.status(406).json('User is not part of the lobby').end();
 
   res.status(200).json(lobby.toJson());
@@ -56,11 +61,11 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
  */
 lobby_id_router.patch('/:id', async (req: Request, res: Response) => {
   const lobbyId = req.params.id;
-  const userId = req.body.id;
+  const userId = req.body.userId;
   const name: string = req.body.lobbyName;
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const {lobby} = verified;
+  const { lobby } = verified;
 
   if (lobby.managerId !== userId) return res.status(406).json('User is not a manager of the lobby').end();
 
@@ -86,10 +91,10 @@ lobby_id_router.delete('/:id', async (req: Request, res: Response) => {
 lobby_id_router.delete('/:id/user/:deleteId', async (req: Request, res: Response) => {
   const lobbyId = req.params.id;
   const deleteUserId = req.params.deleteId;
-  const userId = req.body.id;
+  const userId = req.body.userId;
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
-  const {lobby} = verified;
+  const { lobby } = verified;
 
   if (lobby.managerId !== userId) return res.status(406).json('User is not a manager of the lobby').end();
 
@@ -98,7 +103,7 @@ lobby_id_router.delete('/:id/user/:deleteId', async (req: Request, res: Response
   res.status(200).end();
 });
 
-const verifyIds = async (userId : string, lobbyId : string) : Promise<{user: User, lobby: Lobby} | null> => {
+const verifyIds = async (userId: string, lobbyId: string): Promise<VerifiedObjects | null> => {
   const user = await User.fromId(userId);
   if (!user) return null;
   const lobby = await Lobby.fromId(lobbyId);
