@@ -1,5 +1,5 @@
 import { getClient } from '.';
-import { createSpotifyPlaylist } from '../utils/createSpotifyPlaylist';
+import { createSpotifyPlaylist } from './spotify/create-playlist';
 import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
 
