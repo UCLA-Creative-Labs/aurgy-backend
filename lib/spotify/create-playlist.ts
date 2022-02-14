@@ -18,8 +18,6 @@ import fetch from 'node-fetch';
 import { User } from '..';
 
 export const createSpotifyPlaylist = async (): Promise<string | null> => {
-  // const accessToken = await getServerSpotifyAccess();
-
   const root = await User.fromId('0');
   if (!root) return null;
 
