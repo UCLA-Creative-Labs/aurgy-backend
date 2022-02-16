@@ -22,7 +22,7 @@ interface validateJwtOptions {
   key: string;
 }
 
-function validateJwtToken({req, res, next, token, key}: validateJwtOptions) {
+function validateJwtToken({req, res, next, token, key}: validateJwtOptions): void {
   if (token == null) return res.sendStatus(401).end();
 
   jwt.verify(token, process.env.TOKEN_SECRET as string, (err: VerifyErrors, decoded: any) => {
@@ -35,7 +35,7 @@ function validateJwtToken({req, res, next, token, key}: validateJwtOptions) {
   });
 }
 
-export function validateUserJwt(req: Request, res: Response, next: NextFunction) {
+export function validateUserJwt(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -48,7 +48,7 @@ export function validateUserJwt(req: Request, res: Response, next: NextFunction)
   });
 }
 
-export function validateLobbyJwt(req: Request, res: Response, next: NextFunction) {
+export function validateLobbyJwt(req: Request, res: Response, next: NextFunction): void {
   const token = req.body.lobbyToken;
 
   validateJwtToken({

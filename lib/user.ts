@@ -148,7 +148,7 @@ export class User extends DbItem implements IUser {
       ...entry,
       refreshToken: this.refreshToken,
       topSongs: this.topSongs,
-      lobbies: this.lobbies
+      lobbies: this.lobbies,
     };
   }
 

@@ -125,7 +125,7 @@ export class Song extends DbItem implements ISong {
    * @param af the audio features for the song
    * @param writeToDatabase flag to write the song to the database (default: true)
    */
-  public updateAudioFeatures(af: AudioFeatures, writeToDatabase = true) {
+  public updateAudioFeatures(af: AudioFeatures, writeToDatabase = true): void {
     this.#audioFeatures = af;
     if(writeToDatabase) void this.writeToDatabase();
   }
