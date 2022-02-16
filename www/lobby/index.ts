@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { Lobby } from '../../lib/lobby';
 import { User } from '../../lib/user';
-// import { validateUserJwt } from '../../utils/jwt';
+import { validateUserJwt } from '../../utils/jwt';
 import { lobby_id_router } from './id';
 
 export const lobby_router = Router();
 
-// lobby_router.use('/', validateUserJwt);
+lobby_router.use('/', validateUserJwt);
 lobby_router.use('/', lobby_id_router);
 
 /**
