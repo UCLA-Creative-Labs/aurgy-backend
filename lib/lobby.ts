@@ -1,7 +1,7 @@
 import { getClient, User } from '.';
-import { createSpotifyPlaylist } from '../utils/createSpotifyPlaylist';
 import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
+import { createSpotifyPlaylist } from './spotify/create-playlist';
 
 type DatabaseEntry = Omit<ILobby, 'collectionName'>;
 type ClientResponse = Omit<DatabaseEntry, 'users' | 'uri'>;
