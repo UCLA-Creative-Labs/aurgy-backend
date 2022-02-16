@@ -10,7 +10,7 @@ export interface LobbyCreateProps {
   /**
     * The manager of a lobby
     */
-  readonly managerId: string;
+  readonly manager: User;
 
   /**
    * The theme of a lobby
@@ -23,7 +23,24 @@ export interface LobbyCreateProps {
   readonly name: string;
 }
 
-export interface LobbyProps extends LobbyCreateProps {
+export interface LobbyProps extends Omit<LobbyCreateProps, 'manager'> {
+  /**
+   * The participants in a lobby
+   */
+  readonly participants?: string[];
+
+  /**
+   * The list of song ids in the playlist
+   */
+  readonly songIds?: string[];
+
+  /**
+   * The manager of a lobby
+   */
+  readonly managerId: string;
+}
+
+export interface ILobby extends Omit<LobbyProps, 'particapnts' | 'songIds'>, IDbItem {
   /**
    * The participants in a lobby
    */
@@ -33,13 +50,6 @@ export interface LobbyProps extends LobbyCreateProps {
    * The list of song ids in the playlist
    */
   readonly songIds: string[];
-}
-
-export interface ILobby extends LobbyProps, IDbItem {
-  /**
-  * The spotify id of playlist
-  */
-  readonly spotifyPlaylistId: string;
 }
 
 /**
@@ -65,24 +75,12 @@ export class Lobby extends DbItem implements ILobby {
    * @returns a newly created Lobby object
    */
   public static async create(props: LobbyCreateProps, key : string | null = null) : Promise<Lobby | null> {
-    const managerId = props.managerId;
+    const manager = props.manager;
     const playlistId = await createSpotifyPlaylist();
     if (!playlistId) return null;
-    const participants = [managerId];
-    const songIds: string[] = [];
-    const newProps = {
-      ...props,
-      participants: participants,
-      songIds: songIds,
-    };
-
-    return new Lobby(playlistId, newProps, key);
+    void manager.addLobby(playlistId);
+    return new Lobby(playlistId, {...props, managerId: manager.id}, key);
   }
-
-  /**
-   * The spotify id of playlist
-   */
-  public readonly spotifyPlaylistId: string;
 
   /**
    * The manager user id of a lobby
@@ -122,11 +120,10 @@ export class Lobby extends DbItem implements ILobby {
 
   protected constructor(playlistId: string, props: LobbyProps, key: string | null = null) {
     super(playlistId, COLLECTION.LOBBIES, key);
-    this.spotifyPlaylistId = playlistId;
     this.managerId = props.managerId;
     this.theme = props.theme;
     this.#name = props.name;
-    this.#participants = props.participants ?? [];
+    this.#participants = props.participants ?? [props.managerId];
     this.#songIds = props.songIds ?? [];
   }
 
@@ -136,14 +133,15 @@ export class Lobby extends DbItem implements ILobby {
    */
   public toJson(): DatabaseEntry {
     const {collectionName: _c, ...entry} = this;
-    return { ...entry, name: this.#name, participants: this.#participants, songIds: this.#songIds };
+    return { ...entry, name: this.name, participants: this.participants, songIds: this.songIds };
   }
 
   /**
    * Add a user to the lobby
    */
-  public async addUser(addUserId: string, writeToDb = true): Promise<boolean> {
-    this.#participants.push(addUserId);
+  public async addUser(user: User, writeToDb = true): Promise<boolean> {
+    this.#participants.push(user.id);
+    void user.addLobby(this.id);
     writeToDb && void this.writeToDatabase();
     return true;
   }
@@ -151,9 +149,11 @@ export class Lobby extends DbItem implements ILobby {
   /**
    * Removes a user from the lobby
    */
-  public async removeUser(removeUserId: string, writeToDb = true): Promise<boolean> {
+  public async removeUser(user: User, writeToDb = true): Promise<boolean> {
+    const removeUserId = user.id;
     if (removeUserId === this.managerId || !this.#participants.includes(removeUserId)) return false;
     this.#participants = this.#participants.filter(uid => uid !== removeUserId);
+    void user.removeLobby(this.id);
     writeToDb && void this.writeToDatabase();
     return true;
   }
@@ -173,7 +173,7 @@ export class Lobby extends DbItem implements ILobby {
    */
   public getClientResponse(): ClientResponse {
     const {collectionName: _c, ...response} = this;
-    return response;
+    return {...response, name: this.name, participants: this.participants};
   }
 
   /**

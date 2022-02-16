@@ -1,7 +1,5 @@
 import cors from 'cors';
 import express from 'express';
-
-import { getClient } from '../lib';
 import {logger} from '../utils';
 
 // ROUTES
@@ -21,10 +19,7 @@ app.use(cors({ origin: allowedOrigins }));
 app.use(express.json()); // for parsing application/json
 
 app.get('/', async (_req, res) => {
-  const client = await getClient();
-  const collection = await client.openCollection('test');
-  const count = await collection.find().count();
-  res.send(`Connection to db established!! Count: ${JSON.stringify(count)}`);
+  res.send('Welcome to the aurgy, backend.');
 });
 
 // LOGIN
