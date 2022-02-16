@@ -24,7 +24,6 @@ export const createSpotifyPlaylist = async (): Promise<string | null> => {
   const accessToken = await root.getAccessToken();
   const bodyParams = {
     name: 'aurgy-playlist',
-    public: false,
   };
   const userId = root.uri.split(':')[2];
   const res = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {

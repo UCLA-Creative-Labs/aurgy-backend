@@ -4,7 +4,7 @@ import { getAccessToken } from '../lib/spotify/access-token';
 import { getMeInfo } from '../lib/spotify/me';
 import { User } from '../lib/user';
 import { logger } from '../utils';
-import { genJwt, validateJwt } from '../utils/jwt';
+import { genJwt, validateUserJwt } from '../utils/jwt';
 
 export const me_router = Router();
 
@@ -52,8 +52,8 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
   res.status(200).send({...user.getClientResponse(), jwt});
 });
 
-me_router.get('/', validateJwt, async (req: Request, res: Response): Promise<void> => {
-  const id: string = req.body.id;
+me_router.get('/', validateUserJwt, async (req: Request, res: Response): Promise<void> => {
+  const id: string = req.body.userId;
 
   const user = await User.fromId(id);
   if (!user) return res.status(404).end();
@@ -63,8 +63,8 @@ me_router.get('/', validateJwt, async (req: Request, res: Response): Promise<voi
   res.status(200).send(user.getClientResponse());
 });
 
-me_router.delete('/', validateJwt, async (req: Request, res: Response): Promise<void> => {
-  const id: string = req.body.id;
+me_router.delete('/', validateUserJwt, async (req: Request, res: Response): Promise<void> => {
+  const id: string = req.body.userId;
 
   const user = await User.fromId(id);
   if (!user) return res.status(404).end();
