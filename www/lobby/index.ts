@@ -1,12 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { Lobby } from '../../lib/lobby';
 import { User } from '../../lib/user';
-import { validateUserJwt } from '../../utils/jwt';
+// import { validateUserJwt } from '../../utils/jwt';
 import { lobby_id_router } from './id';
 
 export const lobby_router = Router();
 
-lobby_router.use('/', validateUserJwt);
+// lobby_router.use('/', validateUserJwt);
 lobby_router.use('/', lobby_id_router);
 
 /**
@@ -41,5 +41,8 @@ lobby_router.post('/', async (req: Request, res: Response) => {
  * Body Params: id, refreshToken
  */
 lobby_router.get('/', async (req: Request, res: Response) => {
-  res.status(200).json('placeholder get');
+  const userId = req.body.id;
+  const user = await User.fromId(userId);
+  if (!user) return res.status(404).json('user not found in database').end();
+  res.status(200).json(user.lobbies);
 });

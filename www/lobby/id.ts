@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { User } from '../../lib';
+import { getClient, User } from '../../lib';
 import { Lobby } from '../../lib/lobby';
+import { deleteSpotifyPlaylist } from '../../lib/spotify/delete-playlist';
 import { validateUserJwt, validateLobbyJwt } from '../../utils/jwt';
 
 interface VerifiedObjects {
@@ -85,7 +86,27 @@ lobby_id_router.patch('/:id', async (req: Request, res: Response) => {
  * Body Params: id, refreshToken
  */
 lobby_id_router.delete('/:id', async (req: Request, res: Response) => {
-  res.status(200).json('placeholder delete');
+  const lobbyId = req.params.id;
+  const userId = req.body.userId;
+  const verified = await verifyIds(userId, lobbyId);
+  if (!verified) return res.status(404).json('User or Lobby not found in database').end();
+  const { lobby } = verified;
+
+  if (lobby.managerId !== userId) return res.status(406).json('User is not a manager of the lobby').end();
+  const deleted = await deleteSpotifyPlaylist(lobbyId);
+  if (!deleted) return res.status(500).json('playlist was unable to be deleted').end();
+
+  // remove lobby from each user's lobby list
+  lobby.participants.forEach(async (id) => {
+    const user = await User.fromId(id);
+    await user?.removeLobby(lobbyId);
+  });
+
+  // delete lobby from db
+  const client = await getClient();
+  await client.deleteDbItem(lobby);
+
+  res.status(200).end();
 });
 
 /**
