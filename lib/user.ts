@@ -41,6 +41,11 @@ export interface UserProps {
   * The user's country
   */
   readonly country: string;
+
+  /**
+   * A user's lobbies
+   */
+  readonly lobbies?: string[];
 }
 
 export interface IUser extends Omit<UserProps, 'topSongs'>, IDbItem {
@@ -48,6 +53,11 @@ export interface IUser extends Omit<UserProps, 'topSongs'>, IDbItem {
    * A user's top songs
    */
   readonly topSongs: string[];
+
+  /**
+   * A user's lobbies
+   */
+  readonly lobbies: string[];
 }
 
 /**
@@ -101,6 +111,12 @@ export class User extends DbItem implements IUser {
 
   #topSongs: string[];
 
+  get lobbies(): string[] {
+    return this.#lobbies;
+  }
+
+  #lobbies: string[];
+
   /**
   * The refresh token for the user
   */
@@ -114,6 +130,7 @@ export class User extends DbItem implements IUser {
     super(id, COLLECTION.USERS, key);
     this.#refreshToken = props.refreshToken;
     this.#topSongs = props.topSongs ?? [];
+    this.#lobbies = props.lobbies ?? [];
     this.name = props.name;
     this.accountType = props.accountType;
     this.uri = props.uri;
@@ -127,7 +144,28 @@ export class User extends DbItem implements IUser {
    */
   public toJson(): DatabaseEntry {
     const {collectionName: _c, ...entry} = this;
-    return { ...entry, refreshToken: this.refreshToken, topSongs: this.topSongs };
+    return {
+      ...entry,
+      refreshToken: this.refreshToken,
+      topSongs: this.topSongs,
+      lobbies: this.lobbies
+    };
+  }
+
+  /**
+   * Add a lobby to the user's lobby list
+   */
+  public async addLobby(lobbyId: string, writeToDatabase = true): Promise<void> {
+    this.#lobbies.push(lobbyId);
+    if (writeToDatabase) void this.writeToDatabase();
+  }
+
+  /**
+   * Remove a lobby from the user's lobby list
+   */
+  public async removeLobby(lobbyId: string, writeToDatabase = true): Promise<void> {
+    this.#lobbies.filter(id => id !== lobbyId);
+    if (writeToDatabase) void this.writeToDatabase();
   }
 
   /**

@@ -4,7 +4,7 @@ import { getAccessToken } from '../lib/spotify/access-token';
 import { getMeInfo } from '../lib/spotify/me';
 import { User } from '../lib/user';
 import { logger } from '../utils';
-import { genJwt, validateUserJwt } from '../utils/jwt';
+import { EXPIRATION, genJwt, validateUserJwt } from '../utils/jwt';
 
 export const me_router = Router();
 
@@ -47,7 +47,7 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
   // we should probably remove this at some point or check if its a first time user at least!
   void user.updateTopSongs();
 
-  const jwt = genJwt(user.id);
+  const jwt = genJwt(user.id, EXPIRATION.SEVEN_DAYS);
 
   res.status(200).send({...user.getClientResponse(), jwt});
 });

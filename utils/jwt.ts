@@ -2,11 +2,16 @@ import { NextFunction, Request, Response } from 'express';
 import jwt, { VerifyErrors } from 'jsonwebtoken';
 import { logger } from '.';
 
-export function genJwt(id: string): string {
+export enum EXPIRATION {
+  ONE_HOUR='1h',
+  SEVEN_DAYS='7d',
+}
+
+export function genJwt(id: string, expiration: EXPIRATION ): string {
   if (!process.env.TOKEN_SECRET) {
     throw new Error('Error: JWT Token Secret is missing.');
   }
-  return jwt.sign({id}, process.env.TOKEN_SECRET, { expiresIn: '7d' });
+  return jwt.sign({id}, process.env.TOKEN_SECRET, { expiresIn: expiration });
 }
 
 interface validateJwtOptions {
