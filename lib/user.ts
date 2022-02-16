@@ -164,7 +164,7 @@ export class User extends DbItem implements IUser {
    * Remove a lobby from the user's lobby list
    */
   public async removeLobby(lobbyId: string, writeToDatabase = true): Promise<void> {
-    this.#lobbies.filter(id => id !== lobbyId);
+    this.#lobbies = this.#lobbies.filter(id => id !== lobbyId);
     if (writeToDatabase) void this.writeToDatabase();
   }
 
