@@ -6,10 +6,12 @@ import { lobby_id_router } from './id';
 
 export const lobby_router = Router();
 
-lobby_router.use('/middleware', validateUserJwt);
+lobby_router.use('/', validateUserJwt);
+lobby_router.use('/', lobby_id_router);
 
-// Creates a new lobby and returns the lobby id w/ lobby data
 /**
+ * Creates a new lobby and returns the lobby id w/ lobby data
+ *
  * Body Params: lobbyName, theme, id, refreshToken
  */
 lobby_router.post('/', async (req: Request, res: Response) => {
@@ -23,7 +25,7 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   const lobby = await Lobby.create({
     theme: theme,
     name: lobbyName,
-    managerId: userId,
+    manager,
   });
 
   if(!lobby) return res.status(500).json('unable to create lobby at this time').end();
@@ -33,12 +35,11 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   res.status(200).json({ name: lobby.name, id: lobby.id });
 });
 
-// Returns the lobbies a user is managing and participating in
 /**
+ * Returns the lobbies a user is managing and participating in
+ *
  * Body Params: id, refreshToken
  */
 lobby_router.get('/', async (req: Request, res: Response) => {
   res.status(200).json('placeholder get');
 });
-
-lobby_router.use('/', lobby_id_router);
