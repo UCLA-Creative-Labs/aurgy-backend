@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { User } from '../../lib';
 import { Lobby } from '../../lib/lobby';
-import { validateUserJwt, validateLobbyJwt } from '../../utils/jwt';
+import { validateLobbyJwt } from '../../utils/jwt';
 
 interface VerifiedObjects {
   user: User;
@@ -15,7 +15,7 @@ export const lobby_id_router = Router();
  *
  * Body Params: id, lobbyToken, refreshToken
  */
-lobby_id_router.post('/:id', validateUserJwt, validateLobbyJwt, async (req: Request, res: Response) => {
+lobby_id_router.post('/:id', validateLobbyJwt, async (req: Request, res: Response) => {
   const userId: string = req.body.userId;
   const lobbyId: string = req.params.id;
   const decodedLobbyId: string | undefined = req.body.lobbyId;
@@ -65,7 +65,7 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
 lobby_id_router.patch('/:id', async (req: Request, res: Response) => {
   const lobbyId = req.params.id;
   const userId = req.body.userId;
-  const name: string = req.body.lobbyName;
+  const name: string = req.body.name;
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
   const { lobby } = verified;
