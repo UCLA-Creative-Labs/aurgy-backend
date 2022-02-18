@@ -17,7 +17,7 @@ lobby_router.use('/', lobby_id_router);
 lobby_router.post('/', async (req: Request, res: Response) => {
   const lobbyName = req.body.lobbyName;
   const theme = req.body.theme;
-  const userId = req.body.id;
+  const userId = req.body.userId;
 
   const manager = await User.fromId(userId);
   if (!manager) return res.status(404).json('user not found in database').end();
