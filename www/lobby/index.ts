@@ -41,8 +41,8 @@ lobby_router.post('/', async (req: Request, res: Response) => {
  * Body Params: id, refreshToken
  */
 lobby_router.get('/', async (req: Request, res: Response) => {
-  const userId = req.body.id;
+  const userId = req.body.userId;
   const user = await User.fromId(userId);
   if (!user) return res.status(404).json('user not found in database').end();
-  res.status(200).json(user.lobbies);
+  res.status(200).json({lobbies: user.lobbies});
 });
