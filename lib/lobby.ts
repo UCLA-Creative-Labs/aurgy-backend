@@ -76,7 +76,7 @@ export class Lobby extends DbItem implements ILobby {
    */
   public static async create(props: LobbyCreateProps, key : string | null = null) : Promise<Lobby | null> {
     const manager = props.manager;
-    const playlistId = await createSpotifyPlaylist();
+    const playlistId = await createSpotifyPlaylist(props.name);
     if (!playlistId) return null;
     void manager.addLobby(playlistId);
     return new Lobby(playlistId, {...props, managerId: manager.id}, key);

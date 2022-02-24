@@ -73,6 +73,7 @@ export async function getTopSongs(accessToken: string): Promise<Record<string, S
       const song = songMap[id];
       song.updateAudioFeatures(audioFeatures);
     });
+    logger.info('All new songs written to database.');
   }
 
   return songMap;

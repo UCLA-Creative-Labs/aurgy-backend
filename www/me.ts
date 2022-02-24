@@ -17,7 +17,7 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
       const userInfo = await getMeInfo(tokens.access_token);
       return {tokens, userInfo};
     } catch (err) {
-      logger.error(err);
+      logger.error(`${err}: ${await err.response.text()}`);
     }
     return null;
   };
@@ -44,6 +44,7 @@ me_router.post('/', async (req: Request, res: Response): Promise<void> => {
   // this is an update, we need to write to the database
   user.updateRefreshToken(tokens.refresh_token, false);
 
+  logger.info('Updating Top Songs');
   // we should probably remove this at some point or check if its a first time user at least!
   void user.updateTopSongs();
 

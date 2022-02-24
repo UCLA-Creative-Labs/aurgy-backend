@@ -17,14 +17,11 @@
 import fetch from 'node-fetch';
 import { User } from '..';
 
-export const createSpotifyPlaylist = async (): Promise<string | null> => {
+export const createSpotifyPlaylist = async (name: string): Promise<string | null> => {
   const root = await User.fromId('0');
   if (!root) return null;
 
   const accessToken = await root.getAccessToken();
-  const bodyParams = {
-    name: 'aurgy-playlist',
-  };
   const userId = root.uri.split(':')[2];
   const res = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
     method: 'POST',
@@ -33,7 +30,7 @@ export const createSpotifyPlaylist = async (): Promise<string | null> => {
       'Authorization': 'Bearer ' + accessToken,
       'Host': 'api.spotify.com',
     },
-    body: JSON.stringify(bodyParams),
+    body: JSON.stringify({name}),
   });
 
   const data = await res.json();
