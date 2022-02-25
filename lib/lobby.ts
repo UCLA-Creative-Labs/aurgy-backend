@@ -134,7 +134,7 @@ export class Lobby extends DbItem implements ILobby {
   public async setSongs(writeToDatabase = true): Promise<void> {
     const manager = await User.fromId(this.managerId);
     // TODO: replace this with Pan's algorithm
-    this.#songIds = manager?.topSongs ?? [];
+    this.#songIds = manager?.topSongs.slice(0,50) ?? [];
     writeToDatabase && void this.writeToDatabase();
   }
 
