@@ -9,8 +9,8 @@ export type Comparator<T> = (a: T, b: T) => number
  * @returns the k biggest
  */
 export function quickSelect<T>(arr: T[], cmp: Comparator<T>, k: number): T {
-  if (k > arr.length) throw new Error()
-  
+  if (k > arr.length) throw new Error();
+
   function quickSelectHelper(left: number, right: number): T {
     const pos = partition(arr, cmp, left, right);
     if (pos === k - 1) return arr[pos];
@@ -26,7 +26,7 @@ function partition<T>(arr: T[], cmp: Comparator<T>, left: number, right: number)
   let pivot_i = left;
   for (let i = left; i < right; i++) {
     if (cmp(arr[i], pivot) > 0) {
-      [arr[i], arr[pivot_i]] = [arr[pivot_i], arr[i]]
+      [arr[i], arr[pivot_i]] = [arr[pivot_i], arr[i]];
       pivot_i++;
     }
   }

@@ -1,5 +1,5 @@
-import { quickSelect } from ".";
-import { Comparator } from "./quick-select";
+import { quickSelect } from '.';
+import { Comparator } from './quick-select';
 
 export function kLargest<T>(arr: T[], cmp: Comparator<T>, k: number) {
   const pivot = quickSelect(arr, cmp, k);

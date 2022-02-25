@@ -1,4 +1,4 @@
-import { NO_WEIGHT, Theme } from ".";
+import { NO_WEIGHT, Theme } from '.';
 
 export const dissociating: Theme = {
   acousticness: NO_WEIGHT,
@@ -11,4 +11,4 @@ export const dissociating: Theme = {
   speechiness: NO_WEIGHT,
   tempo: NO_WEIGHT,
   valence: NO_WEIGHT,
-}
+};

@@ -1,11 +1,11 @@
-import { AudioFeatures, Song, User } from "..";
-import { kLargest } from "../../utils";
-import { Lobby } from "../lobby";
-import { addSongs } from "../spotify/add-songs";
-import { THEME, theme2Conditions } from "./themes";
+import { AudioFeatures, Song, User } from '..';
+import { kLargest } from '../../utils';
+import { Lobby } from '../lobby';
+import { addSongs } from '../spotify/add-songs';
+import { THEME, theme2Conditions } from './themes';
 
 /**
- * 
+ *
  * @param lobbyId the lobby to analyze
  */
 export async function synthesizePlaylist(lobbyId: string, theme: THEME): Promise<boolean> {
@@ -53,7 +53,7 @@ function computeScore(af: AudioFeatures, theme: THEME): number {
     return score < conditions[feature].min || conditions[feature].max < score;
   });
   if (!isQualifying) return 0;
-  
+
   const rawScore = Object.entries(af).reduce((acc, [feature, score]: AudioFeatureEntry) => {
     const {target, weight} = conditions[feature];
     return acc + (1 - Math.abs(target - score)) * weight;

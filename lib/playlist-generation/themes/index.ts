@@ -1,5 +1,5 @@
-import { AudioFeatures } from "../.."
-import { dissociating } from "./dissociating";
+import { AudioFeatures } from '../..';
+import { dissociating } from './dissociating';
 
 export type ThemeConditions = {
   min: number,
@@ -8,7 +8,7 @@ export type ThemeConditions = {
   weight: number,
 }
 
-export const NO_WEIGHT: ThemeConditions = { min: 0, max: 0, target: 0, weight: 0 }
+export const NO_WEIGHT: ThemeConditions = { min: 0, max: 0, target: 0, weight: 0 };
 
 export type Theme = {
   [Property in keyof AudioFeatures]: ThemeConditions;

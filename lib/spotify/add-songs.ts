@@ -1,10 +1,10 @@
-import fetch from "node-fetch";
-import { User } from "..";
+import fetch from 'node-fetch';
+import { User } from '..';
 
 /**
  * Spotify Add Items to Playlist
  * https://developer.spotify.com/documentation/web-api/reference/#/operations/add-tracks-to-playlist
- * 
+ *
  * Adds items to a playlist
  */
 export async function addSongs(playlistId: string, ...uris: string[]): Promise<boolean> {
