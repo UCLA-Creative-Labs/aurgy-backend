@@ -184,7 +184,7 @@ export class User extends DbItem implements IUser {
    * @param refreshToken the refresh token to update
    */
   public updateRefreshToken(refreshToken: string, writeToDatabase = true): void {
-    this.#refreshToken = refreshToken;
+    this.#refreshToken = refreshToken;\
     if(writeToDatabase) void this.writeToDatabase();
   }
 
