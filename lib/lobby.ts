@@ -125,13 +125,13 @@ export class Lobby extends DbItem implements ILobby {
     this.#name = props.name;
     this.#participants = props.participants ?? [props.managerId];
     this.#songIds = props.songIds ?? [];
-    this.setSongs();
+    void this.setSongs();
   }
 
   /**
    * Sets the Songs for the playlist
    */
-   public async setSongs(writeToDatabase = true): Promise<void> {
+  public async setSongs(writeToDatabase = true): Promise<void> {
     const manager = await User.fromId(this.managerId);
     // TODO: replace this with Pan's algorithm
     this.#songIds = manager?.topSongs ?? [];
