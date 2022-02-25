@@ -1,5 +1,5 @@
 import { AudioFeatures, Song, User } from '..';
-import { kLargest } from '../../utils';
+import { getNRandomElements, kLargest } from '../../utils';
 import { Lobby } from '../lobby';
 import { addSongs } from '../spotify/add-songs';
 import { THEME, theme2Conditions } from './themes';
@@ -38,7 +38,11 @@ export async function synthesizePlaylist(lobbyId: string, theme: THEME): Promise
 
   const topSongs = kLargest<Song2Score>(songScores, compareSongScores, 50);
 
-  return addSongs(lobbyId, ...topSongs.map(s => s.id));
+  const additionalSongs = topSongs.length === 50
+    ? []
+    : getNRandomElements(Object.keys(songsMap), 50 - topSongs.length);
+
+  return addSongs(lobbyId, ...topSongs.map(s => s.id), ...additionalSongs);
 }
 
 type Song2Score = {id: string, score: number};
