@@ -1,6 +1,7 @@
-import { getClient, User } from '.';
+import { getClient, Song, SongMetadata, updateSongs, User } from '.';
+import { kLargest } from '../utils';
 import { DbItem, IDbItem } from './db-item';
-import { SongMetadata, synthesizePlaylist } from './playlist-generation/synthesize-playlist';
+import { compareSongScores, computeScore, Song2Score } from './playlist-generation/compute-score';
 import { THEME } from './playlist-generation/themes';
 import { COLLECTION } from './private/enums';
 import { createSpotifyPlaylist } from './spotify/create-playlist';
@@ -185,11 +186,46 @@ export class Lobby extends DbItem implements ILobby {
    * Synthesize playlist
    */
   public async synthesizePlaylist(writeToDatabase = true): Promise<boolean> {
-    const {isPlaylistUpdated, songs} = await synthesizePlaylist(this.id, this.theme);
-    this.#songIds = songs.map(s => s.id);
-    this.songMetadata = songs;
+    const songsMap = await this.participants.reduce(async (accP: Promise<Record<string, string[]>>, userId) => {
+      const acc = await accP;
+  
+      const user = await User.fromId(userId);
+      if (!user) return acc;
+  
+      user.topSongs.forEach((songId) => {
+        if (!acc[songId]) acc[songId] = [];
+        acc[songId].push(user.name);
+      });
+  
+      return acc;
+    }, Promise.resolve({}));
+
+    const songScores: Song2Score[] = await Object.entries(songsMap).reduce(async (accP: Promise<Song2Score[]>, [id, contributors]) => {
+      const acc = await accP;
+      const song = await Song.fromId(id);
+      if (!song || !song.audioFeatures) return acc;
+      const score = computeScore(song.audioFeatures, this.theme) * (1 + contributors.length * .1);
+      if (score === 0) return acc;
+      acc.push({song, score});
+      return acc;
+    }, Promise.resolve([]));
+
+    const topSongs = kLargest<Song2Score>(songScores, compareSongScores, 50);
+    const isPlaylistUpdated = await updateSongs(this.id, ...topSongs.map(s => s.song.uri));
+    
+    if (!isPlaylistUpdated) return false;
+
+    this.#songIds = topSongs.map(s => s.song.id);
+    this.songMetadata = topSongs.map(s => ({
+      id: s.song.id,
+      name: s.song.name,
+      artists: s.song.artists.map(a => a.name),
+      contributors: songsMap[s.song.id],
+    }));
+  
     writeToDatabase && void this.writeToDatabase();
-    return isPlaylistUpdated;
+
+    return true;
   }
 
   /**

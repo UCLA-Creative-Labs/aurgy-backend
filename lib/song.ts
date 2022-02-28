@@ -3,6 +3,13 @@ import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
 import { AudioFeatures } from './spotify/audio-features';
 
+export interface SongMetadata {
+  readonly id: string;
+  readonly name: string;
+  readonly artists: string[];
+  readonly contributors: string[];
+}
+
 type DatabaseEntry = Omit<ISong, 'collectionName'>;
 
 export interface IArtist{

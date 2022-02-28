@@ -8,8 +8,6 @@ export type ThemeConditions = {
   weight: number,
 }
 
-export const NO_WEIGHT: ThemeConditions = { min: 0, max: 1, target: 0, weight: 0 };
-
 export type Theme = {
   [Property in keyof AudioFeatures]: ThemeConditions;
 };
@@ -18,6 +16,6 @@ export enum THEME {
   DISSOCIATING_ON_THE_HIGHWAY = 'dissociating on the highway',
 }
 
-export const theme2Conditions: Record<THEME, Theme> = Object.freeze({
+export const theme2Conditions: Record<THEME, Theme> = {
   [THEME.DISSOCIATING_ON_THE_HIGHWAY]: dissociating,
-});
+};

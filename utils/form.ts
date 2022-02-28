@@ -7,12 +7,19 @@
  * @param payload a single level object
  * @returns a url encoded version of the payload
  */
-export function objectToForm(payload: Record<string, string>): string {
+export function objectToForm(payload: Record<string, string | string[]>): string {
   const form = [];
   for (const key in payload) {
     const encodedKey = encodeURIComponent(key);
-    const encodedValue = encodeURIComponent(payload[key]);
+    const encodedValue = encodeValue(payload[key]);
     form.push(encodedKey + '=' + encodedValue);
   }
   return form.join('&');
+}
+
+export const encodeValue = (value: string | string[]): string => {
+  if (typeof value === 'string') {
+    return encodeURIComponent(value);
+  }
+  return value.reduce((acc, v) => `${acc}${encodeURIComponent(v)},`, '').slice(0, -1);
 }

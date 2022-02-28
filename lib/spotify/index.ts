@@ -1,5 +1,5 @@
 export * from './access-token';
-export * from './add-songs';
+export * from './update-songs';
 export * from './audio-features';
 export * from './create-playlist';
 export * from './delete-playlist';

@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Lobby } from '../../lib/lobby';
+import { THEME } from '../../lib/playlist-generation/themes';
 import { User } from '../../lib/user';
 import { logger } from '../../utils';
 import { validateUserJwt } from '../../utils/jwt';
@@ -17,7 +18,7 @@ lobby_router.use('/', lobby_id_router);
  */
 lobby_router.post('/', async (req: Request, res: Response) => {
   const lobbyName = req.body.lobbyName;
-  const theme = req.body.theme;
+  // const theme = req.body.theme;
   const userId = req.body.userId;
 
   const manager = await User.fromId(userId);
@@ -26,7 +27,7 @@ lobby_router.post('/', async (req: Request, res: Response) => {
   logger.info(`Creating playlist called ${lobbyName}.`);
 
   const lobby = await Lobby.create({
-    theme: theme,
+    theme: THEME.DISSOCIATING_ON_THE_HIGHWAY,
     name: lobbyName,
     manager,
   });

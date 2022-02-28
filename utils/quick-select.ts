@@ -9,7 +9,6 @@ export type Comparator<T> = (a: T, b: T) => number
  * @returns the k biggest
  */
 export function quickSelect<T>(arr: T[], cmp: Comparator<T>, k: number): T {
-  if (k > arr.length) throw new Error();
 
   function quickSelectHelper(left: number, right: number): T {
     const pos = partition(arr, cmp, left, right);
