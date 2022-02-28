@@ -173,7 +173,14 @@ export class Lobby extends DbItem implements ILobby {
    */
   public getClientResponse(): ClientResponse {
     const {collectionName: _c, ...response} = this;
-    return {...response, name: this.name, participants: this.participants};
+    const participants = this.participants.map(async (id) => {
+      const user = await User.fromId(id);
+      if (!user) return;
+      return {
+        name: user.name,
+      };
+    });
+    return {...response, name: this.name, participants: participants, theme: this.theme};
   }
 
   /**
