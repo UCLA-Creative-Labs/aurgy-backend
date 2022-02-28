@@ -1,4 +1,4 @@
-import { getClient, Song, User } from '.';
+import { getClient, User } from '.';
 import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
 import { createSpotifyPlaylist } from './spotify/create-playlist';
@@ -173,22 +173,7 @@ export class Lobby extends DbItem implements ILobby {
    */
   public getClientResponse(): ClientResponse {
     const {collectionName: _c, ...response} = this;
-    const participants = this.participants.map(async (id) => {
-      const user = await User.fromId(id);
-      if (!user) return;
-      return {
-        name: user.name,
-      };
-    });
-    const songs = this.songIds.map(async (id) => {
-      const song = await Song.fromId(id);
-      if (!song) return;
-      return {
-        name: song.name,
-        artists: song.artists,
-      };
-    });
-    return {...response, name: this.name, participants: participants, theme: this.theme, songs: songs};
+    return {...response, name: this.name, participants: this.participants, theme: this.theme, songIds: this.songIds};
   }
 
   /**

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { User } from '../../lib';
+import { Song, User } from '../../lib';
 import { Lobby } from '../../lib/lobby';
 import { deleteSpotifyPlaylist } from '../../lib/spotify/delete-playlist';
 import { updateSpotifyPlaylist } from '../../lib/spotify/update-playlist';
@@ -56,7 +56,24 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
   const { lobby } = verified;
   if (!lobby.participants.includes(userId)) return res.status(406).json('User is not part of the lobby').end();
 
-  res.status(200).json(lobby.getClientResponse());
+  const clientRes = lobby.getClientResponse();
+  const participants = await Promise.all(clientRes.participants.map(async (id : string) => {
+    const user = await User.fromId(id);
+    if (!user) return;
+    return {
+      name: user.name,
+    };
+  }));
+  const songs = await Promise.all(clientRes.songIds.map(async (id : string) => {
+    const song = await Song.fromId(id);
+    if (!song) return;
+    return {
+      name: song.name,
+      artists: song.artists,
+    };
+  }));
+
+  res.status(200).json({...clientRes, participants: participants, songs: songs});
 });
 
 /**
