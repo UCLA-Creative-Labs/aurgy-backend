@@ -172,7 +172,7 @@ export class User extends DbItem implements IUser {
    * Updates a user's top songs
    */
   public async updateTopSongs(writeToDatabase = true): Promise<void> {
-    const accessToken = await this.getAccessToken();
+    const accessToken = await this.getAccessToken(false);
     const topSongs = await getTopSongs(accessToken);
     this.#topSongs = Object.keys(topSongs);
     if (writeToDatabase) void this.writeToDatabase();
@@ -194,9 +194,9 @@ export class User extends DbItem implements IUser {
    *
    * @returns a new access token for the user
    */
-  public async getAccessToken(): Promise<string> {
+  public async getAccessToken(writeToDatabase = true): Promise<string> {
     const tokens = await getAccessToken(this.refreshToken);
-    this.updateRefreshToken(tokens.refresh_token);
+    this.updateRefreshToken(tokens.refresh_token, writeToDatabase);
     return tokens.access_token;
   }
 

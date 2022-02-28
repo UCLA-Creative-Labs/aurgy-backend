@@ -128,6 +128,7 @@ lobby_id_router.delete('/:id/user/:deleteId', async (req: Request, res: Response
 });
 
 const verifyIds = async (userId: string, lobbyId: string): Promise<VerifiedObjects | null> => {
+  if (!userId || !lobbyId) return null;
   const user = await User.fromId(userId);
   if (!user) return null;
   const lobby = await Lobby.fromId(lobbyId);

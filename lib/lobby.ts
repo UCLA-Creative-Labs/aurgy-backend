@@ -1,10 +1,17 @@
 import { getClient, User } from '.';
 import { DbItem, IDbItem } from './db-item';
+import { SongMetadata, synthesizePlaylist } from './playlist-generation/synthesize-playlist';
+import { THEME } from './playlist-generation/themes';
 import { COLLECTION } from './private/enums';
 import { createSpotifyPlaylist } from './spotify/create-playlist';
 
 type DatabaseEntry = Omit<ILobby, 'collectionName'>;
-type ClientResponse = Omit<DatabaseEntry, 'users' | 'uri'>;
+type ClientResponse = {
+  theme: THEME;
+  name: string;
+  participants: string[];
+  songs: SongMetadata[];
+}
 
 export interface LobbyCreateProps {
   /**
@@ -15,7 +22,7 @@ export interface LobbyCreateProps {
   /**
    * The theme of a lobby
    */
-  readonly theme: string;
+  readonly theme: THEME;
 
   /**
     * The playlist name
@@ -38,9 +45,14 @@ export interface LobbyProps extends Omit<LobbyCreateProps, 'manager'> {
    * The manager of a lobby
    */
   readonly managerId: string;
+
+  /**
+   * Metadata regarding the songs in the playlist
+   */
+  readonly songMetadata?: SongMetadata[];
 }
 
-export interface ILobby extends Omit<LobbyProps, 'particapnts' | 'songIds'>, IDbItem {
+export interface ILobby extends Omit<LobbyProps, 'particapnts' | 'songIds' | 'songMetadata'>, IDbItem {
   /**
    * The participants in a lobby
    */
@@ -90,7 +102,7 @@ export class Lobby extends DbItem implements ILobby {
   /**
    * The theme of a lobby
    */
-  public readonly theme: string;
+  public readonly theme: THEME;
 
   /**
    * The playlist name
@@ -118,6 +130,8 @@ export class Lobby extends DbItem implements ILobby {
 
   #songIds: string[];
 
+  private songMetadata: SongMetadata[];
+
   protected constructor(playlistId: string, props: LobbyProps, key: string | null = null) {
     super(playlistId, COLLECTION.LOBBIES, key);
     this.managerId = props.managerId;
@@ -125,6 +139,7 @@ export class Lobby extends DbItem implements ILobby {
     this.#name = props.name;
     this.#participants = props.participants ?? [props.managerId];
     this.#songIds = props.songIds ?? [];
+    this.songMetadata = props.songMetadata ?? [];
   }
 
   /**
@@ -167,13 +182,23 @@ export class Lobby extends DbItem implements ILobby {
   }
 
   /**
+   * Synthesize playlist
+   */
+  public async synthesizePlaylist(writeToDatabase = true): Promise<boolean> {
+    const {isPlaylistUpdated, songs} = await synthesizePlaylist(this.id, this.theme);
+    this.#songIds = songs.map(s => s.id);
+    this.songMetadata = songs;
+    writeToDatabase && void this.writeToDatabase();
+    return isPlaylistUpdated;
+  }
+
+  /**
    * Formats the data in a client friendly manner
    *
    * @returns return a client response
    */
   public getClientResponse(): ClientResponse {
-    const {collectionName: _c, ...response} = this;
-    return {...response, name: this.name, participants: this.participants};
+    return {name: this.name, theme: this.theme, participants: this.participants, songs: this.songMetadata};
   }
 
   /**
