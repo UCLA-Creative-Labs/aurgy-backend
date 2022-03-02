@@ -4,7 +4,7 @@ import { THEME, theme2Conditions, ThemeConditions } from './themes';
 
 export type Song2Score = {song: Song, score: number};
 
-export const compareSongScores = (a: Song2Score, b: Song2Score) => a.score < b.score ? -1 : 1;
+export const compareSongScores = (a: Song2Score, b: Song2Score): number => a.score < b.score ? -1 : 1;
 
 type AudioFeatureEntry = [feature: keyof AudioFeatures, condition: ThemeConditions];
 

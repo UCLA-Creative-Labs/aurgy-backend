@@ -22,4 +22,4 @@ export const encodeValue = (value: string | string[]): string => {
     return encodeURIComponent(value);
   }
   return value.reduce((acc, v) => `${acc}${encodeURIComponent(v)},`, '').slice(0, -1);
-}
+};

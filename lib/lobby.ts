@@ -188,31 +188,32 @@ export class Lobby extends DbItem implements ILobby {
   public async synthesizePlaylist(writeToDatabase = true): Promise<boolean> {
     const songsMap = await this.participants.reduce(async (accP: Promise<Record<string, string[]>>, userId) => {
       const acc = await accP;
-  
+
       const user = await User.fromId(userId);
       if (!user) return acc;
-  
+
       user.topSongs.forEach((songId) => {
         if (!acc[songId]) acc[songId] = [];
         acc[songId].push(user.name);
       });
-  
+
       return acc;
     }, Promise.resolve({}));
 
-    const songScores: Song2Score[] = await Object.entries(songsMap).reduce(async (accP: Promise<Song2Score[]>, [id, contributors]) => {
-      const acc = await accP;
-      const song = await Song.fromId(id);
-      if (!song || !song.audioFeatures) return acc;
-      const score = computeScore(song.audioFeatures, this.theme) * (1 + contributors.length * .1);
-      if (score === 0) return acc;
-      acc.push({song, score});
-      return acc;
-    }, Promise.resolve([]));
+    const songScores: Song2Score[] = await Object.entries(songsMap).
+      reduce(async (accP: Promise<Song2Score[]>, [id, contributors]) => {
+        const acc = await accP;
+        const song = await Song.fromId(id);
+        if (!song || !song.audioFeatures) return acc;
+        const score = computeScore(song.audioFeatures, this.theme) * (1 + contributors.length * .1);
+        if (score === 0) return acc;
+        acc.push({song, score});
+        return acc;
+      }, Promise.resolve([]));
 
     const topSongs = kLargest<Song2Score>(songScores, compareSongScores, 50);
     const isPlaylistUpdated = await updateSongs(this.id, ...topSongs.map(s => s.song.uri));
-    
+
     if (!isPlaylistUpdated) return false;
 
     this.#songIds = topSongs.map(s => s.song.id);
@@ -222,7 +223,7 @@ export class Lobby extends DbItem implements ILobby {
       artists: s.song.artists.map(a => a.name),
       contributors: songsMap[s.song.id],
     }));
-  
+
     writeToDatabase && void this.writeToDatabase();
 
     return true;

@@ -13,7 +13,7 @@ export const dissociating: Theme = {
     target: 0.15,
     weight: 1,
   },
-  loudness: NO_WEIGHT, 
+  loudness: NO_WEIGHT,
   mode: NO_WEIGHT,
   speechiness: NO_WEIGHT,
   tempo: NO_WEIGHT,
