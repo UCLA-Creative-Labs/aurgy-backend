@@ -1,6 +1,5 @@
 import fetch from 'node-fetch';
 import { User } from '..';
-import { objectToForm } from '../../utils';
 
 /**
  * Spotify Update Items In Playlist
@@ -13,13 +12,13 @@ export async function updateSongs(playlistId: string, ...uris: string[]): Promis
   if (!root) return false;
 
   const accessToken = await root.getAccessToken();
-
-  const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks?${objectToForm({uris})}`, {
+  const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+    method: 'PUT',
     headers: {
-      'Method': 'PUT',
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({uris}),
   });
 
   return res.ok;
