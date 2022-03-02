@@ -39,7 +39,7 @@ lobby_router.post('/', async (req: Request, res: Response) => {
 
   const playlistCreated = lobby.synthesizePlaylist();
 
-  !!playlistCreated && logger.error(`Failed to synthesize playlist, ${lobbyName}.`);
+  !playlistCreated && logger.error(`Failed to synthesize playlist, ${lobbyName}.`);
 
   res.status(200).json({ name: lobby.name, id: lobby.id });
 });
