@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { Song, User } from '../../lib';
+import { User } from '../../lib';
 import { Lobby } from '../../lib/lobby';
 import { deleteSpotifyPlaylist } from '../../lib/spotify/delete-playlist';
 import { updateSpotifyPlaylist } from '../../lib/spotify/update-playlist';
@@ -99,7 +99,7 @@ lobby_id_router.delete('/:id', async (req: Request, res: Response) => {
   // remove lobby from each user's lobby list
   lobby.participants.forEach(async (id) => {
     const user = await User.fromId(id);
-    user?.removeLobby(lobbyId);
+    user?.removeLobby(lobby);
   });
 
   void lobby.removeFromDatabase();

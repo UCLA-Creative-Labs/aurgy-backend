@@ -1,11 +1,18 @@
 import { getAccessToken, getClient, SpotifySubscriptionType } from '.';
 import { DbItem, IDbItem } from './db-item';
+import { Lobby } from './lobby';
+import { THEME } from './playlist-generation/themes';
 import { COLLECTION } from './private/enums';
 import { getTopSongs } from './spotify/top-songs';
 
 type DatabaseEntry = Omit<IUser, 'collectionName'>;
 type ClientResponse = Omit<DatabaseEntry, 'uri'>;
 
+export interface LobbyMetadata {
+  id: string,
+  name: string,
+  theme: THEME,
+}
 export interface UserProps {
   /**
    * The refresh token for the user
@@ -45,7 +52,7 @@ export interface UserProps {
   /**
    * A user's lobbies
    */
-  readonly lobbies?: string[];
+  readonly lobbies?: LobbyMetadata[];
 }
 
 export interface IUser extends Omit<UserProps, 'topSongs'>, IDbItem {
@@ -57,7 +64,7 @@ export interface IUser extends Omit<UserProps, 'topSongs'>, IDbItem {
   /**
    * A user's lobbies
    */
-  readonly lobbies: string[];
+  readonly lobbies: LobbyMetadata[];
 }
 
 /**
@@ -111,11 +118,11 @@ export class User extends DbItem implements IUser {
 
   #topSongs: string[];
 
-  get lobbies(): string[] {
+  get lobbies(): LobbyMetadata[] {
     return this.#lobbies;
   }
 
-  #lobbies: string[];
+  #lobbies: LobbyMetadata[];
 
   /**
   * The refresh token for the user
@@ -155,16 +162,16 @@ export class User extends DbItem implements IUser {
   /**
    * Add a lobby to the user's lobby list
    */
-  public async addLobby(lobbyId: string, writeToDatabase = true): Promise<void> {
-    this.#lobbies.push(lobbyId);
+  public async addLobby(lobby: Lobby, writeToDatabase = true): Promise<void> {
+    this.#lobbies.push({id: lobby.id, name: lobby.name, theme: lobby.theme});
     if (writeToDatabase) void this.writeToDatabase();
   }
 
   /**
    * Remove a lobby from the user's lobby list
    */
-  public async removeLobby(lobbyId: string, writeToDatabase = true): Promise<void> {
-    this.#lobbies = this.#lobbies.filter(id => id !== lobbyId);
+  public async removeLobby(lobby: Lobby, writeToDatabase = true): Promise<void> {
+    this.#lobbies = this.#lobbies.filter(lobbyObj => lobbyObj.id !== lobby.id);
     if (writeToDatabase) void this.writeToDatabase();
   }
 
@@ -207,6 +214,6 @@ export class User extends DbItem implements IUser {
    */
   public getClientResponse(): ClientResponse {
     const {collectionName: _c, uri: _u, ...response} = this;
-    return response;
+    return {...response, lobbies: this.lobbies};
   }
 }

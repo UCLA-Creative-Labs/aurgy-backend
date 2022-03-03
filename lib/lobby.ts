@@ -106,8 +106,9 @@ export class Lobby extends DbItem implements ILobby {
     const manager = props.manager;
     const playlistId = await createSpotifyPlaylist(props.name);
     if (!playlistId) return null;
-    void manager.addLobby(playlistId);
-    return new Lobby(playlistId, {...props, managerId: manager.id, managerName: manager.name}, key);
+    const newLobby = new Lobby(playlistId, {...props, managerId: manager.id, managerName: manager.name}, key);
+    void manager.addLobby(newLobby);
+    return newLobby;
   }
 
   /**
@@ -181,7 +182,7 @@ export class Lobby extends DbItem implements ILobby {
   public async addUser(user: User, writeToDb = true): Promise<boolean> {
     this.#participants.push(user.id);
     this.userMetadata.push({id: user.id, name: user.name});
-    void user.addLobby(this.id);
+    void user.addLobby(this);
     writeToDb && void this.writeToDatabase();
     return true;
   }
@@ -194,7 +195,7 @@ export class Lobby extends DbItem implements ILobby {
     if (removeUserId === this.managerId || !this.#participants.includes(removeUserId)) return false;
     this.#participants = this.#participants.filter(uid => uid !== removeUserId);
     this.userMetadata = this.userMetadata.filter(userObj => userObj.id !== removeUserId);
-    void user.removeLobby(this.id);
+    void user.removeLobby(this);
     writeToDb && void this.writeToDatabase();
     return true;
   }
@@ -260,7 +261,13 @@ export class Lobby extends DbItem implements ILobby {
    * @returns return a client response
    */
   public getClientResponse(): ClientResponse {
-    return {name: this.name, theme: this.theme, participants: this.participants, songs: this.songMetadata, users: this.userMetadata};
+    return {
+      name: this.name,
+      theme: this.theme,
+      participants: this.participants,
+      songs: this.songMetadata,
+      users: this.userMetadata,
+    };
   }
 
   /**

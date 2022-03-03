@@ -53,14 +53,5 @@ lobby_router.get('/', async (req: Request, res: Response) => {
   const userId = req.body.userId;
   const user = await User.fromId(userId);
   if (!user) return res.status(404).json('user not found in database').end();
-
-  const lobbies = await Promise.all(user.lobbies.map(async (id : string) => {
-    const lobby = await Lobby.fromId(id);
-    if (!lobby) return {err: `lobby ${id} doesn't exist`};
-    return {
-      name: lobby.name,
-      theme: lobby.theme,
-    };
-  }));
-  res.status(200).json({lobbies: lobbies});
+  res.status(200).json({lobbies: user.lobbies});
 });
