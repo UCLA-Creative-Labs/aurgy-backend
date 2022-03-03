@@ -55,25 +55,7 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
   const { lobby } = verified;
   if (!lobby.participants.includes(userId)) return res.status(406).json('User is not part of the lobby').end();
-
-  const clientRes = lobby.getClientResponse();
-  const participants = await Promise.all(clientRes.participants.map(async (id : string) => {
-    const user = await User.fromId(id);
-    if (!user) return;
-    return {
-      name: user.name,
-    };
-  }));
-  const songs = await Promise.all(clientRes.songs.map(async (metadata) => {
-    const song = await Song.fromId(metadata.id);
-    if (!song) return;
-    return {
-      name: song.name,
-      artists: song.artists,
-    };
-  }));
-
-  res.status(200).json({...clientRes, participants: participants, songs: songs});
+  res.status(200).json(lobby.getClientResponse());
 });
 
 /**
