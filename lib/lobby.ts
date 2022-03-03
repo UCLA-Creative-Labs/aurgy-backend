@@ -5,6 +5,8 @@ import { compareSongScores, computeScore, Song2Score } from './playlist-generati
 import { THEME } from './playlist-generation/themes';
 import { COLLECTION } from './private/enums';
 import { createSpotifyPlaylist } from './spotify/create-playlist';
+import { followPlaylist } from './spotify/follow-playlist';
+import { unfollowPlaylist } from './spotify/unfollow-playlist';
 
 type DatabaseEntry = Omit<ILobby, 'collectionName'>;
 type ClientResponse = {
@@ -159,7 +161,8 @@ export class Lobby extends DbItem implements ILobby {
     this.#participants.push(user.id);
     void user.addLobby(this.id);
     writeToDb && void this.writeToDatabase();
-    return true;
+    const addedToPlaylist = await followPlaylist(user, this.id);
+    return addedToPlaylist;
   }
 
   /**
@@ -171,7 +174,8 @@ export class Lobby extends DbItem implements ILobby {
     this.#participants = this.#participants.filter(uid => uid !== removeUserId);
     void user.removeLobby(this.id);
     writeToDb && void this.writeToDatabase();
-    return true;
+    const removedFromPlaylist = await unfollowPlaylist(user, this.id);
+    return removedFromPlaylist;
   }
 
   /**
