@@ -3,7 +3,7 @@ import { User } from '../../lib';
 import { Lobby } from '../../lib/lobby';
 import { deleteSpotifyPlaylist } from '../../lib/spotify/delete-playlist';
 import { updateSpotifyPlaylist } from '../../lib/spotify/update-playlist';
-import { validateLobbyJwt } from '../../utils/jwt';
+import { validateLobbyJwt, genJwt, EXPIRATION } from '../../utils/jwt';
 
 interface VerifiedObjects {
   user: User;
@@ -56,7 +56,8 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
   const { lobby } = verified;
   if (!lobby.participants.includes(userId)) return res.status(406).json('User is not part of the lobby').end();
 
-  res.status(200).json(lobby.getClientResponse());
+  const lobbyToken = genJwt(lobbyId, EXPIRATION.SEVEN_DAYS);
+  res.status(200).json({...lobby.getClientResponse(), lobbyToken: lobbyToken});
 });
 
 /**
