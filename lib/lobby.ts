@@ -183,6 +183,7 @@ export class Lobby extends DbItem implements ILobby {
     this.#participants.push(user.id);
     this.userMetadata.push({id: user.id, name: user.name});
     void user.addLobby(this);
+    void this.synthesizePlaylist();
     writeToDb && void this.writeToDatabase();
     return true;
   }
