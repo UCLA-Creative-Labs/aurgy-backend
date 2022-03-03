@@ -57,8 +57,8 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
   if (!lobby.participants.includes(userId)) return res.status(406).json('User is not part of the lobby').end();
 
   res.status(200).json(userId === lobby.managerId
-    ? lobby.getClientResponse()
-    : {...lobby.getClientResponse, lobbyToken: genJwt(lobbyId, EXPIRATION.ONE_HOUR}
+    ? {...lobby.getClientResponse(), lobbyToken: genJwt(lobbyId, EXPIRATION.ONE_HOUR)}
+    : lobby.getClientResponse());
 });
 
 /**
