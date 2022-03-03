@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { Lobby } from '../../lib/lobby';
+import { THEME } from '../../lib/playlist-generation/themes';
 import { User } from '../../lib/user';
+import { logger } from '../../utils';
 import { validateUserJwt } from '../../utils/jwt';
 import { lobby_id_router } from './id';
 
@@ -16,21 +18,28 @@ lobby_router.use('/', lobby_id_router);
  */
 lobby_router.post('/', async (req: Request, res: Response) => {
   const lobbyName = req.body.lobbyName;
-  const theme = req.body.theme;
+  // const theme = req.body.theme;
   const userId = req.body.userId;
 
   const manager = await User.fromId(userId);
   if (!manager) return res.status(404).json('user not found in database').end();
 
+  logger.info(`Creating playlist called ${lobbyName}.`);
+
   const lobby = await Lobby.create({
-    theme: theme,
+    theme: THEME.DISSOCIATING_ON_THE_HIGHWAY,
     name: lobbyName,
     manager,
   });
 
-  if(!lobby) return res.status(500).json('unable to create lobby at this time').end();
+  if(!lobby) {
+    logger.error(`Failed to create playlist, ${lobbyName}.`);
+    return res.status(500).json('unable to create lobby at this time').end();
+  }
 
-  void lobby.writeToDatabase();
+  const playlistCreated = lobby.synthesizePlaylist();
+
+  !playlistCreated && logger.error(`Failed to synthesize playlist, ${lobbyName}.`);
 
   res.status(200).json({ name: lobby.name, id: lobby.id });
 });

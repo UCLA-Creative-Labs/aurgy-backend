@@ -64,8 +64,8 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
       name: user.name,
     };
   }));
-  const songs = await Promise.all(clientRes.songIds.map(async (id : string) => {
-    const song = await Song.fromId(id);
+  const songs = await Promise.all(clientRes.songs.map(async (metadata) => {
+    const song = await Song.fromId(metadata.id);
     if (!song) return;
     return {
       name: song.name,
@@ -145,6 +145,7 @@ lobby_id_router.delete('/:id/user/:deleteId', async (req: Request, res: Response
 });
 
 const verifyIds = async (userId: string, lobbyId: string): Promise<VerifiedObjects | null> => {
+  if (!userId || !lobbyId) return null;
   const user = await User.fromId(userId);
   if (!user) return null;
   const lobby = await Lobby.fromId(lobbyId);
