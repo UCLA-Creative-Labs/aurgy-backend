@@ -1,4 +1,4 @@
-import { getClient, Song, SongMetadata, updateSongs, User } from '.';
+import { getClient, Song, SongMetadata, updateSongs, User, UserMetadata } from '.';
 import { kLargest } from '../utils';
 import { DbItem, IDbItem } from './db-item';
 import { compareSongScores, computeScore, Song2Score } from './playlist-generation/compute-score';
@@ -14,7 +14,11 @@ type ClientResponse = {
   songs: SongMetadata[];
   users: UserMetadata[];
 }
-
+export interface LobbyMetadata {
+  id: string,
+  name: string,
+  theme: THEME,
+}
 export interface LobbyCreateProps {
   /**
     * The manager of a lobby
@@ -29,11 +33,6 @@ export interface LobbyCreateProps {
   /**
     * The playlist name
     */
-  readonly name: string;
-}
-
-export interface UserMetadata {
-  readonly id: string;
   readonly name: string;
 }
 export interface LobbyProps extends Omit<LobbyCreateProps, 'manager'> {

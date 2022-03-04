@@ -1,17 +1,14 @@
 import { getAccessToken, getClient, SpotifySubscriptionType } from '.';
 import { DbItem, IDbItem } from './db-item';
-import { Lobby } from './lobby';
-import { THEME } from './playlist-generation/themes';
+import { Lobby, LobbyMetadata } from './lobby';
 import { COLLECTION } from './private/enums';
 import { getTopSongs } from './spotify/top-songs';
 
 type DatabaseEntry = Omit<IUser, 'collectionName'>;
 type ClientResponse = Omit<DatabaseEntry, 'uri'>;
-
-export interface LobbyMetadata {
-  id: string,
-  name: string,
-  theme: THEME,
+export interface UserMetadata {
+  readonly id: string;
+  readonly name: string;
 }
 export interface UserProps {
   /**
