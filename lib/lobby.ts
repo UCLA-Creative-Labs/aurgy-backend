@@ -161,8 +161,7 @@ export class Lobby extends DbItem implements ILobby {
    */
   public async removeUser(user: User, writeToDb = true): Promise<boolean> {
     const removeUserId = user.id;
-    const userInLobby = !!this.userMetadata.find(userObj => userObj.id === removeUserId);
-    if (removeUserId === this.managerId || !userInLobby) return false;
+    if (removeUserId === this.managerId || !this.containsParticipant(removeUserId)) return false;
     this.userMetadata = this.userMetadata.filter(userObj => userObj.id !== removeUserId);
     void user.removeLobby(this);
     writeToDb && void this.writeToDatabase();

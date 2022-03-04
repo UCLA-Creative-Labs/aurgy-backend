@@ -54,8 +54,7 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
   const { lobby } = verified;
-  const clientRes = lobby.getClientResponse();
-  if (!clientRes.users.includes(userId)) return res.status(406).json('User is not part of the lobby').end();
+  if (!lobby.containsParticipant(userId)) return res.status(406).json('User is not part of the lobby').end();
   res.status(200).json(lobby.getClientResponse());
 });
 
