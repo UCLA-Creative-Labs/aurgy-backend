@@ -18,7 +18,7 @@ export function objectToForm(payload: Record<string, string | string[]>): string
 }
 
 export const encodeValue = (value: string | string[]): string => {
-  if (typeof value === 'string') {
+  if (typeof value !== 'object') {
     return encodeURIComponent(value);
   }
   return value.reduce((acc, v) => `${acc}${encodeURIComponent(v)},`, '').slice(0, -1);
