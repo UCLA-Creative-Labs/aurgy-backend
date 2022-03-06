@@ -12,6 +12,8 @@ type ClientResponse = {
   name: string;
   songs: SongMetadata[];
   users: UserMetadata[];
+  managerId: string,
+  managerName: string,
 }
 export interface LobbyMetadata {
   id: string,
@@ -183,7 +185,8 @@ export class Lobby extends DbItem implements ILobby {
     const songsMap = await this.userMetadata.reduce(async (accP: Promise<Record<string, string[]>>, userObj) => {
       const acc = await accP;
 
-      const user = await User.fromId(userObj.id);
+      const userId = userObj.id;
+      const user = await User.fromId(userId);
       if (!user) return acc;
 
       user.topSongs.forEach((songId) => {
@@ -233,6 +236,8 @@ export class Lobby extends DbItem implements ILobby {
       theme: this.theme,
       songs: this.songMetadata,
       users: this.userMetadata,
+      managerId: this.managerId,
+      managerName: this.managerName,
     };
   }
 
