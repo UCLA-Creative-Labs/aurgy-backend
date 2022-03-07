@@ -1,8 +1,8 @@
-import { Lobby } from "../lib/lobby";
+import { Lobby } from '../lib/lobby';
 
 async function main() {
   const lobbies = await Lobby.all();
-  lobbies.forEach(lobby => lobby.synthesizePlaylist());
+  lobbies.forEach(lobby => void lobby.synthesizePlaylist());
 }
 
-main();
+void main();
