@@ -3,7 +3,7 @@ import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
 import { getTopSongs } from './spotify/top-songs';
 
-type DatabaseEntry = Omit<IUser, 'collectionName'>;
+type DatabaseEntry = Omit<IUser, 'collectionName' | 'key'>;
 type ClientResponse = Omit<DatabaseEntry, 'uri'>;
 
 export interface UserProps {
@@ -73,8 +73,8 @@ export class User extends DbItem implements IUser {
     const client = await getClient();
     const document = await client.findDbItem(COLLECTION.USERS, id);
     if (!document) return null;
-    const content: DatabaseEntry = document.getContent() as DatabaseEntry;
-    return new User(id, content, document.key ?? null);
+    const content = document.getContent();
+    return new User(id, content as DatabaseEntry, document.key ?? null);
   }
 
   /**
