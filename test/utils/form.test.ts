@@ -39,4 +39,19 @@ describe('Testing Form Conversion', () => {
     // EXPECT
     expect(form).toBe('bryan=amazing&cl=dope&techTeam=bestTeam');
   });
+
+  test('on object w/ number', () => {
+    // GIVEN
+    const obj: Record<string, any> = {
+      bryan: 0,
+      cl: 'dope',
+      techTeam: 'bestTeam',
+    };
+
+    // WHEN
+    const form = objectToForm(obj);
+
+    // EXPECT
+    expect(form).toBe('bryan=0&cl=dope&techTeam=bestTeam');
+  });
 });
