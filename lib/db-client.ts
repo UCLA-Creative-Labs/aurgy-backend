@@ -132,7 +132,7 @@ export class DbClient {
 
   /**
    * Get all the items in a collecion
-   * 
+   *
    * @param collectionName the collection to query
    * @returns all the items in a collection
    */
