@@ -147,6 +147,7 @@ export class Lobby extends DbItem implements ILobby {
   protected constructor(playlistId: string, props: LobbyProps, key: string | null = null) {
     super(playlistId, COLLECTION.LOBBIES, key);
     this.managerId = props.managerId;
+    this.managerName = props.managerName;
     this.theme = props.theme;
     this.#name = props.name;
     this.songMetadata = props.songMetadata ?? [];
