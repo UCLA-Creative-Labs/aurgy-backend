@@ -131,6 +131,18 @@ export class DbClient {
   }
 
   /**
+   * Get all the items in a collecion
+   *
+   * @param collectionName the collection to query
+   * @returns all the items in a collection
+   */
+  public async getCollectionItems(collectionName: string): Promise<oracledb.SodaDocument[]> {
+    const collection = await this.openCollection(collectionName);
+    const docs = await collection.find().getDocuments();
+    return docs;
+  }
+
+  /**
    * Write database items to a database
    *
    * @param items the items to insert into the database

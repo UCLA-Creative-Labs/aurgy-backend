@@ -1,21 +1,25 @@
-import { getClient, Song, SongMetadata, updateSongs, User } from '.';
+import { getClient, Song, SongMetadata, updateSongs, User, UserMetadata } from '.';
 import { kLargest } from '../utils';
 import { DbItem, IDbItem } from './db-item';
 import { compareSongScores, computeScore, Song2Score } from './playlist-generation/compute-score';
 import { THEME } from './playlist-generation/themes';
 import { COLLECTION } from './private/enums';
 import { createSpotifyPlaylist } from './spotify/create-playlist';
-// import { followPlaylist } from './spotify/follow-playlist';
-// import { unfollowPlaylist } from './spotify/unfollow-playlist';
 
-type DatabaseEntry = Omit<ILobby, 'collectionName'>;
+type DatabaseEntry = Omit<ILobby, 'collectionName' | 'key'>;
 type ClientResponse = {
   theme: THEME;
   name: string;
-  participants: string[];
   songs: SongMetadata[];
+  users: UserMetadata[];
+  managerId: string,
+  managerName: string,
 }
-
+export interface LobbyMetadata {
+  id: string,
+  name: string,
+  theme: THEME,
+}
 export interface LobbyCreateProps {
   /**
     * The manager of a lobby
@@ -32,7 +36,6 @@ export interface LobbyCreateProps {
     */
   readonly name: string;
 }
-
 export interface LobbyProps extends Omit<LobbyCreateProps, 'manager'> {
   /**
    * The participants in a lobby
@@ -50,27 +53,42 @@ export interface LobbyProps extends Omit<LobbyCreateProps, 'manager'> {
   readonly managerId: string;
 
   /**
+   * The manager of a lobby's name
+   */
+  readonly managerName: string;
+
+  /**
    * Metadata regarding the songs in the playlist
    */
   readonly songMetadata?: SongMetadata[];
+
+  /**
+   * Metadata regarding the users in the lobby
+   */
+  readonly userMetadata?: UserMetadata[];
 }
 
-export interface ILobby extends Omit<LobbyProps, 'particapnts' | 'songIds' | 'songMetadata'>, IDbItem {
-  /**
-   * The participants in a lobby
-   */
-  readonly participants: string[];
-
-  /**
-   * The list of song ids in the playlist
-   */
-  readonly songIds: string[];
+export interface ILobby extends Omit<LobbyProps, 'particapnts' | 'songIds' | 'songMetadata' | 'userMetadata'>, IDbItem {
 }
 
 /**
  * The class containing a user and their data
  */
 export class Lobby extends DbItem implements ILobby {
+  /**
+   * A static function to get all the lobby in the database
+   *
+   * @returns all lobby in the lobby collection
+   */
+  public static async all(): Promise<Lobby[]> {
+    const client = await getClient();
+    const docs = await client.getCollectionItems(COLLECTION.LOBBIES);
+    return await Promise.all(docs.map(doc => {
+      const content = doc.getContent();
+      return new Lobby(content.id, content as DatabaseEntry, content.key);
+    }));
+  }
+
   /**
    * A static function to query for a Lobby from its id
    *
@@ -80,8 +98,8 @@ export class Lobby extends DbItem implements ILobby {
     const client = await getClient();
     const document = await client.findDbItem(COLLECTION.LOBBIES, id);
     if (!document) return null;
-    const content: DatabaseEntry = document.getContent() as DatabaseEntry;
-    return new Lobby(id, content, document.key ?? null);
+    const content = document.getContent();
+    return new Lobby(id, content as DatabaseEntry, document.key ?? null);
   }
 
   /**
@@ -93,15 +111,21 @@ export class Lobby extends DbItem implements ILobby {
     const manager = props.manager;
     const playlistId = await createSpotifyPlaylist(props.name);
     if (!playlistId) return null;
-    const added = manager.addLobby(playlistId);
+    const newLobby = new Lobby(playlistId, {...props, managerId: manager.id, managerName: manager.name}, key);
+    const added = manager.addLobby(newLobby);
     if (!added) return null;
-    return new Lobby(playlistId, {...props, managerId: manager.id}, key);
+    return newLobby;
   }
 
   /**
    * The manager user id of a lobby
    */
   public readonly managerId: string;
+
+  /**
+   * The manager name of a lobby
+   */
+  public readonly managerName: string;
 
   /**
    * The theme of a lobby
@@ -116,34 +140,17 @@ export class Lobby extends DbItem implements ILobby {
   }
   #name: string;
 
-  /**
-   * The participants in a lobby
-   */
-  get participants(): string[] {
-    return this.#participants;
-  }
-
-  #participants: string[];
-
-  /**
-   * The list of song ids in the playlist
-   */
-  get songIds(): string[] {
-    return this.#songIds;
-  }
-
-  #songIds: string[];
-
   private songMetadata: SongMetadata[];
+
+  private userMetadata: UserMetadata[];
 
   protected constructor(playlistId: string, props: LobbyProps, key: string | null = null) {
     super(playlistId, COLLECTION.LOBBIES, key);
     this.managerId = props.managerId;
     this.theme = props.theme;
     this.#name = props.name;
-    this.#participants = props.participants ?? [props.managerId];
-    this.#songIds = props.songIds ?? [];
     this.songMetadata = props.songMetadata ?? [];
+    this.userMetadata = props.userMetadata ?? [{id: props.managerId, name: props.managerName}];
   }
 
   /**
@@ -152,15 +159,17 @@ export class Lobby extends DbItem implements ILobby {
    */
   public toJson(): DatabaseEntry {
     const {collectionName: _c, ...entry} = this;
-    return { ...entry, name: this.name, participants: this.participants, songIds: this.songIds };
+    return { ...entry, name: this.name};
   }
 
   /**
    * Add a user to the lobby
    */
   public async addUser(user: User, writeToDb = true): Promise<boolean> {
-    this.#participants.push(user.id);
-    const added = await user.addLobby(this.id);
+    this.userMetadata.push({id: user.id, name: user.name});
+    const added = await user.addLobby(this);
+    if (!added) return false;
+    void this.synthesizePlaylist();
     writeToDb && void this.writeToDatabase();
     return added;
   }
@@ -170,9 +179,10 @@ export class Lobby extends DbItem implements ILobby {
    */
   public async removeUser(user: User, writeToDb = true): Promise<boolean> {
     const removeUserId = user.id;
-    if (removeUserId === this.managerId || !this.#participants.includes(removeUserId)) return false;
-    this.#participants = this.#participants.filter(uid => uid !== removeUserId);
-    const removed = await user.removeLobby(this.id);
+    if (removeUserId === this.managerId || !this.containsParticipant(removeUserId)) return false;
+    this.userMetadata = this.userMetadata.filter(userObj => userObj.id !== removeUserId);
+    const removed = await user.removeLobby(this);
+    if (!removed) return false;
     writeToDb && void this.writeToDatabase();
     return removed;
   }
@@ -189,9 +199,10 @@ export class Lobby extends DbItem implements ILobby {
    * Synthesize playlist
    */
   public async synthesizePlaylist(writeToDatabase = true): Promise<boolean> {
-    const songsMap = await this.participants.reduce(async (accP: Promise<Record<string, string[]>>, userId) => {
+    const songsMap = await this.userMetadata.reduce(async (accP: Promise<Record<string, string[]>>, userObj) => {
       const acc = await accP;
 
+      const userId = userObj.id;
       const user = await User.fromId(userId);
       if (!user) return acc;
 
@@ -219,7 +230,6 @@ export class Lobby extends DbItem implements ILobby {
 
     if (!isPlaylistUpdated) return false;
 
-    this.#songIds = topSongs.map(s => s.song.id);
     this.songMetadata = topSongs.map(s => ({
       id: s.song.id,
       name: s.song.name,
@@ -238,7 +248,14 @@ export class Lobby extends DbItem implements ILobby {
    * @returns return a client response
    */
   public getClientResponse(): ClientResponse {
-    return {name: this.name, theme: this.theme, participants: this.participants, songs: this.songMetadata};
+    return {
+      name: this.name,
+      theme: this.theme,
+      songs: this.songMetadata,
+      users: this.userMetadata,
+      managerId: this.managerId,
+      managerName: this.managerName,
+    };
   }
 
   /**
@@ -246,6 +263,6 @@ export class Lobby extends DbItem implements ILobby {
    */
   public containsParticipant(user: string | User): boolean {
     const userId = typeof user == 'string' ? user : user.id;
-    return this.#participants.includes(userId);
+    return !!this.userMetadata.find((userObj) => userObj.id === userId);
   }
 }

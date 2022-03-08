@@ -1,13 +1,17 @@
 import { getAccessToken, getClient, SpotifySubscriptionType } from '.';
 import { DbItem, IDbItem } from './db-item';
+import { Lobby, LobbyMetadata } from './lobby';
 import { COLLECTION } from './private/enums';
 import { getTopSongs } from './spotify/top-songs';
 import { followPlaylist } from './spotify/follow-playlist';
 import { unfollowPlaylist } from './spotify/unfollow-playlist';
 
-type DatabaseEntry = Omit<IUser, 'collectionName'>;
+type DatabaseEntry = Omit<IUser, 'collectionName' | 'key'>;
 type ClientResponse = Omit<DatabaseEntry, 'uri'>;
-
+export interface UserMetadata {
+  readonly id: string;
+  readonly name: string;
+}
 export interface UserProps {
   /**
    * The refresh token for the user
@@ -47,7 +51,7 @@ export interface UserProps {
   /**
    * A user's lobbies
    */
-  readonly lobbies?: string[];
+  readonly lobbies?: LobbyMetadata[];
 }
 
 export interface IUser extends Omit<UserProps, 'topSongs'>, IDbItem {
@@ -59,7 +63,7 @@ export interface IUser extends Omit<UserProps, 'topSongs'>, IDbItem {
   /**
    * A user's lobbies
    */
-  readonly lobbies: string[];
+  readonly lobbies: LobbyMetadata[];
 }
 
 /**
@@ -75,8 +79,8 @@ export class User extends DbItem implements IUser {
     const client = await getClient();
     const document = await client.findDbItem(COLLECTION.USERS, id);
     if (!document) return null;
-    const content: DatabaseEntry = document.getContent() as DatabaseEntry;
-    return new User(id, content, document.key ?? null);
+    const content = document.getContent();
+    return new User(id, content as DatabaseEntry, document.key ?? null);
   }
 
   /**
@@ -113,11 +117,11 @@ export class User extends DbItem implements IUser {
 
   #topSongs: string[];
 
-  get lobbies(): string[] {
+  get lobbies(): LobbyMetadata[] {
     return this.#lobbies;
   }
 
-  #lobbies: string[];
+  #lobbies: LobbyMetadata[];
 
   /**
   * The refresh token for the user
@@ -157,21 +161,20 @@ export class User extends DbItem implements IUser {
   /**
    * Add a lobby to the user's lobby list
    */
-  public async addLobby(lobbyId: string, writeToDatabase = true): Promise<boolean> {
-    this.#lobbies.push(lobbyId);
+  public async addLobby(lobby: Lobby, writeToDatabase = true): Promise<boolean> {
+    this.#lobbies.push({id: lobby.id, name: lobby.name, theme: lobby.theme});
     if (writeToDatabase) void this.writeToDatabase();
-    // console.log("attempting to have : "+this.id +" follow playlist "+)
-    const addedToPlaylist = await followPlaylist(this, lobbyId);
+    const addedToPlaylist = await followPlaylist(this, lobby.id);
     return addedToPlaylist;
   }
 
   /**
    * Remove a lobby from the user's lobby list
    */
-  public async removeLobby(lobbyId: string, writeToDatabase = true): Promise<boolean> {
-    this.#lobbies = this.#lobbies.filter(id => id !== lobbyId);
+  public async removeLobby(lobby: Lobby, writeToDatabase = true): Promise<boolean> {
+    this.#lobbies = this.#lobbies.filter(lobbyObj => lobbyObj.id !== lobby.id);
     if (writeToDatabase) void this.writeToDatabase();
-    const removedFromPlaylist = await unfollowPlaylist(this, lobbyId);
+    const removedFromPlaylist = await unfollowPlaylist(this, lobby.id);
     return removedFromPlaylist;
   }
 
@@ -214,6 +217,6 @@ export class User extends DbItem implements IUser {
    */
   public getClientResponse(): ClientResponse {
     const {collectionName: _c, uri: _u, ...response} = this;
-    return response;
+    return {...response, lobbies: this.lobbies};
   }
 }

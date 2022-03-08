@@ -10,7 +10,7 @@ export interface SongMetadata {
   readonly contributors: string[];
 }
 
-type DatabaseEntry = Omit<ISong, 'collectionName'>;
+type DatabaseEntry = Omit<ISong, 'collectionName' | 'key'>;
 
 export interface IArtist{
   id: string;
@@ -53,6 +53,20 @@ export interface ISong extends SongProps, IDbItem {}
  */
 export class Song extends DbItem implements ISong {
   /**
+   * A static function to get all the songs in the database
+   *
+   * @returns all songs in the song collection
+   */
+  public static async all(): Promise<Song[]> {
+    const client = await getClient();
+    const docs = await client.getCollectionItems(COLLECTION.SONGS);
+    return await Promise.all(docs.map(doc => {
+      const content = doc.getContent();
+      return new Song(content.id, content as DatabaseEntry, content.key);
+    }));
+  }
+
+  /**
    * A static function to query for a song from its id
    *
    * @returns a song object if the id exists in the database
@@ -61,8 +75,8 @@ export class Song extends DbItem implements ISong {
     const client = await getClient();
     const document = await client.findDbItem(COLLECTION.SONGS, id);
     if (!document) return null;
-    const content: DatabaseEntry = document.getContent() as DatabaseEntry;
-    return new Song(id, content, document.key ?? null);
+    const content = document.getContent();
+    return new Song(id, content as DatabaseEntry, document.key ?? null);
   }
 
   /**

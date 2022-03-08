@@ -3,7 +3,7 @@ import { User } from '../../lib';
 import { Lobby } from '../../lib/lobby';
 import { deleteSpotifyPlaylist } from '../../lib/spotify/delete-playlist';
 import { updateSpotifyPlaylist } from '../../lib/spotify/update-playlist';
-import { validateLobbyJwt } from '../../utils/jwt';
+import { validateLobbyJwt, genJwt, EXPIRATION } from '../../utils/jwt';
 
 interface VerifiedObjects {
   user: User;
@@ -54,9 +54,10 @@ lobby_id_router.get('/:id', async (req: Request, res: Response) => {
   const verified = await verifyIds(userId, lobbyId);
   if (!verified) return res.status(404).json('User or Lobby not found in database').end();
   const { lobby } = verified;
-  if (!lobby.participants.includes(userId)) return res.status(406).json('User is not part of the lobby').end();
-
-  res.status(200).json(lobby.getClientResponse());
+  if (!lobby.containsParticipant(userId)) return res.status(406).json('User is not part of the lobby').end();
+  res.status(200).json(userId === lobby.managerId
+    ? {...lobby.getClientResponse(), lobbyToken: genJwt(lobbyId, EXPIRATION.ONE_HOUR)}
+    : lobby.getClientResponse());
 });
 
 /**
@@ -97,10 +98,11 @@ lobby_id_router.delete('/:id', async (req: Request, res: Response) => {
   const deleted = await deleteSpotifyPlaylist(lobbyId);
   if (!deleted) return res.status(500).json('playlist was unable to be deleted').end();
 
+  const clientRes = lobby.getClientResponse();
   // remove lobby from each user's lobby list
-  lobby.participants.forEach(async (id) => {
-    const user = await User.fromId(id);
-    user?.removeLobby(lobbyId);
+  clientRes.users.forEach(async (userObj) => {
+    const user = await User.fromId(userObj.id);
+    user?.removeLobby(lobby);
   });
 
   void lobby.removeFromDatabase();
