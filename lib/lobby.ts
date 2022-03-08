@@ -112,7 +112,8 @@ export class Lobby extends DbItem implements ILobby {
     const playlistId = await createSpotifyPlaylist(props.name);
     if (!playlistId) return null;
     const newLobby = new Lobby(playlistId, {...props, managerId: manager.id, managerName: manager.name}, key);
-    void manager.addLobby(newLobby);
+    const added = manager.addLobby(newLobby);
+    if (!added) return null;
     return newLobby;
   }
 
@@ -166,10 +167,11 @@ export class Lobby extends DbItem implements ILobby {
    */
   public async addUser(user: User, writeToDb = true): Promise<boolean> {
     this.userMetadata.push({id: user.id, name: user.name});
-    void user.addLobby(this);
+    const added = await user.addLobby(this);
+    if (!added) return false;
     void this.synthesizePlaylist();
     writeToDb && void this.writeToDatabase();
-    return true;
+    return added;
   }
 
   /**
@@ -179,9 +181,10 @@ export class Lobby extends DbItem implements ILobby {
     const removeUserId = user.id;
     if (removeUserId === this.managerId || !this.containsParticipant(removeUserId)) return false;
     this.userMetadata = this.userMetadata.filter(userObj => userObj.id !== removeUserId);
-    void user.removeLobby(this);
+    const removed = await user.removeLobby(this);
+    if (!removed) return false;
     writeToDb && void this.writeToDatabase();
-    return true;
+    return removed;
   }
 
   /**

@@ -3,6 +3,8 @@ import { DbItem, IDbItem } from './db-item';
 import { Lobby, LobbyMetadata } from './lobby';
 import { COLLECTION } from './private/enums';
 import { getTopSongs } from './spotify/top-songs';
+import { followPlaylist } from './spotify/follow-playlist';
+import { unfollowPlaylist } from './spotify/unfollow-playlist';
 
 type DatabaseEntry = Omit<IUser, 'collectionName' | 'key'>;
 type ClientResponse = Omit<DatabaseEntry, 'uri'>;
@@ -159,17 +161,21 @@ export class User extends DbItem implements IUser {
   /**
    * Add a lobby to the user's lobby list
    */
-  public async addLobby(lobby: Lobby, writeToDatabase = true): Promise<void> {
+  public async addLobby(lobby: Lobby, writeToDatabase = true): Promise<boolean> {
     this.#lobbies.push({id: lobby.id, name: lobby.name, theme: lobby.theme});
     if (writeToDatabase) void this.writeToDatabase();
+    const addedToPlaylist = await followPlaylist(this, lobby.id);
+    return addedToPlaylist;
   }
 
   /**
    * Remove a lobby from the user's lobby list
    */
-  public async removeLobby(lobby: Lobby, writeToDatabase = true): Promise<void> {
+  public async removeLobby(lobby: Lobby, writeToDatabase = true): Promise<boolean> {
     this.#lobbies = this.#lobbies.filter(lobbyObj => lobbyObj.id !== lobby.id);
     if (writeToDatabase) void this.writeToDatabase();
+    const removedFromPlaylist = await unfollowPlaylist(this, lobby.id);
+    return removedFromPlaylist;
   }
 
   /**
