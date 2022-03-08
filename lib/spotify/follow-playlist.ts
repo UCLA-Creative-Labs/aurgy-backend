@@ -11,24 +11,20 @@
  * returns true if the user successfully followed the playlist
  */
 
- import fetch from 'node-fetch';
- import { User } from '..';
- 
- export const followPlaylist = async (user: User, playlistId: string): Promise<boolean> => {
-   
- 
-   const accessToken = await user.getAccessToken();
-  
-   const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/followers`, {
-     method: 'PUT',
-     headers: {
-       'Content-Type': 'application/json',
-       'Authorization': 'Bearer ' + accessToken,
-       'Host': 'api.spotify.com',
-     },
-     body: JSON.stringify({'public': true}),
-   });
-   console.log(await res.json());
- 
-   return res.ok;
- };
+import fetch from 'node-fetch';
+import { User } from '..';
+
+export const followPlaylist = async (user: User, playlistId: string): Promise<boolean> => {
+  const accessToken = await user.getAccessToken();
+  const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/followers`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + accessToken,
+      'Host': 'api.spotify.com',
+    },
+    body: JSON.stringify({ 'public': false }),
+  });
+
+  return res.ok;
+};

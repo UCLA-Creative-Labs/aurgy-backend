@@ -9,23 +9,20 @@
  * returns true if the user successfully unfollowed the playlist
  */
 
- import fetch from 'node-fetch';
- import { User } from '..';
- 
- export const unfollowPlaylist = async (user: User, playlistId: string): Promise<boolean> => {
-   
- 
-   const accessToken = await user.getAccessToken();
-  
-   const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/followers`, {
-     method: 'DELETE',
-     headers: {
-       'Content-Type': 'application/json',
-       'Authorization': 'Bearer ' + accessToken,
-       'Host': 'api.spotify.com',
-     },
-   });
-   console.log(await res.json());
- 
-   return res.ok;
- };
+import fetch from 'node-fetch';
+import { User } from '..';
+
+export const unfollowPlaylist = async (user: User, playlistId: string): Promise<boolean> => {
+  const accessToken = await user.getAccessToken();
+
+  const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/followers`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + accessToken,
+      'Host': 'api.spotify.com',
+    },
+  });
+
+  return res.ok;
+};
