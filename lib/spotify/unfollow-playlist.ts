@@ -2,10 +2,10 @@
  * Spotify API Unfollow Playlist Endpoint
  * https://developer.spotify.com/documentation/web-api/reference/#/operations/unfollow-playlist
  * DELETE /playlists/{playlist_id}/followers
- * 
+ *
  * unfollowPlaylist
  * params: accessToken, playlist_id
- * 
+ *
  * returns true if the user successfully unfollowed the playlist
  */
 

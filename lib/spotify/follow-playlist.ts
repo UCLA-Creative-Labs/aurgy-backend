@@ -4,10 +4,10 @@
  * PUT /playlists/{playlist_id}/followers
  * Body:
  * public: boolean
- * 
+ *
  * followPlaylist
  * params: accessToken, playlist_id
- * 
+ *
  * returns true if the user successfully followed the playlist
  */
 
@@ -23,7 +23,7 @@ export const followPlaylist = async (user: User, playlistId: string): Promise<bo
       'Authorization': 'Bearer ' + accessToken,
       'Host': 'api.spotify.com',
     },
-    body: JSON.stringify({ 'public': false }),
+    body: JSON.stringify({ public: false }),
   });
 
   return res.ok;
