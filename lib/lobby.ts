@@ -6,7 +6,7 @@ import { THEME } from './playlist-generation/themes';
 import { COLLECTION } from './private/enums';
 import { createSpotifyPlaylist } from './spotify/create-playlist';
 
-type DatabaseEntry = Omit<ILobby, 'collectionName'>;
+type DatabaseEntry = Omit<ILobby, 'collectionName' | 'key'>;
 type ClientResponse = {
   theme: THEME;
   name: string;
@@ -76,6 +76,20 @@ export interface ILobby extends Omit<LobbyProps, 'particapnts' | 'songIds' | 'so
  */
 export class Lobby extends DbItem implements ILobby {
   /**
+   * A static function to get all the lobby in the database
+   *
+   * @returns all lobby in the lobby collection
+   */
+  public static async all(): Promise<Lobby[]> {
+    const client = await getClient();
+    const docs = await client.getCollectionItems(COLLECTION.LOBBIES);
+    return await Promise.all(docs.map(doc => {
+      const content = doc.getContent();
+      return new Lobby(content.id, content as DatabaseEntry, content.key);
+    }));
+  }
+
+  /**
    * A static function to query for a Lobby from its id
    *
    * @returns a Lobby object if the id exists in the database
@@ -84,8 +98,8 @@ export class Lobby extends DbItem implements ILobby {
     const client = await getClient();
     const document = await client.findDbItem(COLLECTION.LOBBIES, id);
     if (!document) return null;
-    const content: DatabaseEntry = document.getContent() as DatabaseEntry;
-    return new Lobby(id, content, document.key ?? null);
+    const content = document.getContent();
+    return new Lobby(id, content as DatabaseEntry, document.key ?? null);
   }
 
   /**
