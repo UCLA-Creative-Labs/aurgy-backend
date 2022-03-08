@@ -2,6 +2,8 @@ import { getAccessToken, getClient, SpotifySubscriptionType } from '.';
 import { DbItem, IDbItem } from './db-item';
 import { COLLECTION } from './private/enums';
 import { getTopSongs } from './spotify/top-songs';
+import { followPlaylist } from './spotify/follow-playlist';
+import { unfollowPlaylist } from './spotify/unfollow-playlist';
 
 type DatabaseEntry = Omit<IUser, 'collectionName'>;
 type ClientResponse = Omit<DatabaseEntry, 'uri'>;
@@ -155,17 +157,22 @@ export class User extends DbItem implements IUser {
   /**
    * Add a lobby to the user's lobby list
    */
-  public async addLobby(lobbyId: string, writeToDatabase = true): Promise<void> {
+  public async addLobby(lobbyId: string, writeToDatabase = true): Promise<boolean> {
     this.#lobbies.push(lobbyId);
     if (writeToDatabase) void this.writeToDatabase();
+    // console.log("attempting to have : "+this.id +" follow playlist "+)
+    const addedToPlaylist = await followPlaylist(this, lobbyId);
+    return addedToPlaylist;
   }
 
   /**
    * Remove a lobby from the user's lobby list
    */
-  public async removeLobby(lobbyId: string, writeToDatabase = true): Promise<void> {
+  public async removeLobby(lobbyId: string, writeToDatabase = true): Promise<boolean> {
     this.#lobbies = this.#lobbies.filter(id => id !== lobbyId);
     if (writeToDatabase) void this.writeToDatabase();
+    const removedFromPlaylist = await unfollowPlaylist(this, lobbyId);
+    return removedFromPlaylist;
   }
 
   /**

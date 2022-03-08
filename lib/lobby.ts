@@ -5,8 +5,8 @@ import { compareSongScores, computeScore, Song2Score } from './playlist-generati
 import { THEME } from './playlist-generation/themes';
 import { COLLECTION } from './private/enums';
 import { createSpotifyPlaylist } from './spotify/create-playlist';
-import { followPlaylist } from './spotify/follow-playlist';
-import { unfollowPlaylist } from './spotify/unfollow-playlist';
+// import { followPlaylist } from './spotify/follow-playlist';
+// import { unfollowPlaylist } from './spotify/unfollow-playlist';
 
 type DatabaseEntry = Omit<ILobby, 'collectionName'>;
 type ClientResponse = {
@@ -93,7 +93,8 @@ export class Lobby extends DbItem implements ILobby {
     const manager = props.manager;
     const playlistId = await createSpotifyPlaylist(props.name);
     if (!playlistId) return null;
-    void manager.addLobby(playlistId);
+    const added = manager.addLobby(playlistId);
+    if (!added) return null;
     return new Lobby(playlistId, {...props, managerId: manager.id}, key);
   }
 
@@ -159,10 +160,9 @@ export class Lobby extends DbItem implements ILobby {
    */
   public async addUser(user: User, writeToDb = true): Promise<boolean> {
     this.#participants.push(user.id);
-    void user.addLobby(this.id);
+    const added = await user.addLobby(this.id);
     writeToDb && void this.writeToDatabase();
-    const addedToPlaylist = await followPlaylist(user, this.id);
-    return addedToPlaylist;
+    return added;
   }
 
   /**
@@ -172,10 +172,9 @@ export class Lobby extends DbItem implements ILobby {
     const removeUserId = user.id;
     if (removeUserId === this.managerId || !this.#participants.includes(removeUserId)) return false;
     this.#participants = this.#participants.filter(uid => uid !== removeUserId);
-    void user.removeLobby(this.id);
+    const removed = await user.removeLobby(this.id);
     writeToDb && void this.writeToDatabase();
-    const removedFromPlaylist = await unfollowPlaylist(user, this.id);
-    return removedFromPlaylist;
+    return removed;
   }
 
   /**
