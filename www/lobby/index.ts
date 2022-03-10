@@ -5,9 +5,11 @@ import { User } from '../../lib/user';
 import { logger } from '../../utils';
 import { validateUserJwt } from '../../utils/jwt';
 import { lobby_id_router } from './id';
+import { lobby_themes_router } from './themes';
 
 export const lobby_router = Router();
 
+lobby_router.use('/', lobby_themes_router);
 lobby_router.use('/', validateUserJwt);
 lobby_router.use('/', lobby_id_router);
 
